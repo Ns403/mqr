@@ -5,6 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.RobotContextHolder;
+import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.annotation.PJob;
 import com.molicloud.mqr.plugin.core.define.RobotDef;
@@ -14,11 +16,15 @@ import com.molicloud.mqr.plugin.core.event.MessageEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -35,8 +41,8 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
     private RestTemplate restTemplate;
 
     // 茉莉机器人API，以下api仅供测试，如需自定义词库和机器人名字等，请前往官网获取，获取地址 http://www.itpk.cn
-    private static final String apiKey = "2efdd0243d746921c565225ca4fdf07b";
-    private static final String apiSecret = "itpk123456";
+    private static final String apiKey = "b7824e882d9a990e48a0e0a34d53c464";
+    private static final String apiSecret = "1kn3idlxfiht";
 
     @PHook(name = "AiReply",
             equalsKeywords = { "设置聊天前缀", "设置报时类型", "设置报时者名字" },
@@ -103,7 +109,18 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
                 && !StrUtil.startWith(message, prefix)) {
             pluginResult.setProcessed(false);
         } else {
-            String reply = aiReply(message, prefix);
+            String reply = "这是啥？";
+            if (!StringUtils.isEmpty(message)) {
+                String regEx = "[a-z0-9A-Z\\u4e00-\\u9fa5]";
+                Pattern p = Pattern.compile(regEx);
+                Matcher m = p.matcher(message);
+                StringBuilder sb = new StringBuilder();
+                while (m.find()) {
+                    sb.append(m.group());
+                }
+                message = StringUtils.isEmpty(sb.toString()) ? "啥表情" : sb.toString();
+                reply = aiReply(message, prefix);
+            }
             pluginResult.setProcessed(true);
             pluginResult.setMessage(reply);
         }
@@ -112,23 +129,9 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
 
     @PJob(cron = "0 0 * * * ?", hookName = "AiReply")
     public void handlerTimer() {
-        MessageEvent messageEvent = new MessageEvent();
-        messageEvent.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
         // 获取配置
         AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
-        if (aiRepltSetting == null
-                || aiRepltSetting.getTimerType() == null
-                || aiRepltSetting.getTimerType() == 1) {
-            // 获取所有群列表
-            List<RobotDef.Group> getGroupList = getGroupList();
-            // 整点报时发给所有群
-            messageEvent.setToIds(getGroupList.stream().map(RobotDef.Group::getId).collect(Collectors.toList()));
-        } else {
-            // 获取所有的白名单群ID列表
-            List<String> groupIdList = getGroupIdAllowList();
-            // 整点报时发给所有群
-            messageEvent.setToIds(groupIdList);
-        }
+        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
         if (CollUtil.isNotEmpty(messageEvent.getToIds())) {
             Integer hour = LocalTime.now().getHour();
             String name = aiRepltSetting == null || StrUtil.isBlank(aiRepltSetting.getTimerName()) ? "茉莉" : aiRepltSetting.getTimerName();
@@ -145,6 +148,30 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         return restTemplate.getForObject(aiUrl, String.class);
     }
 
+    @PJob(cron = "0 0 7 * * ? ", hookName = "AiReply")
+    public void timeOffMuteAll(){
+        // 获取配置
+        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
+        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
+        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+            Integer hour = LocalTime.now().getHour();
+            messageEvent.setAction(Action.builder().isMuteAll(false).build());
+            messageEvent.setMessage(String.format("宵禁结束：%s", hour));
+            pushMessage(messageEvent);
+        }
+    }
+    @PJob(cron = "0 0 0 * * ? ", hookName = "AiReply")
+    public void timeOnMuteAll(){
+        // 获取配置
+        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
+        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
+        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+            Integer hour = LocalTime.now().getHour();
+            messageEvent.setAction(Action.builder().isMuteAll(true).build());
+            messageEvent.setMessage(String.format("开始宵禁：%s", hour));
+            pushMessage(messageEvent);
+        }
+    }
     /**
      * 根据当前小时获取提示语
      *
@@ -231,5 +258,25 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
                 break;
         }
         return tip;
+    }
+
+    public MessageEvent getMessageEvent(AiRepltSetting aiRepltSetting) {
+        MessageEvent messageEvent = new MessageEvent();
+        messageEvent.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
+
+        if (aiRepltSetting == null
+                || aiRepltSetting.getTimerType() == null
+                || aiRepltSetting.getTimerType() == 1) {
+            // 获取所有群列表
+            List<RobotDef.Group> getGroupList = getGroupList();
+            // 整点报时发给所有群
+            messageEvent.setToIds(getGroupList.stream().map(RobotDef.Group::getId).collect(Collectors.toList()));
+        } else {
+            // 获取所有的白名单群ID列表
+            List<String> groupIdList = getGroupIdAllowList();
+            // 整点报时发给所有群
+            messageEvent.setToIds(groupIdList);
+        }
+        return messageEvent;
     }
 }

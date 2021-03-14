@@ -54,9 +54,7 @@ public class RobotController {
         }
 
         // 启动机器人
-        Thread qqRunThread = new Thread(() -> {
-            robotServerStarter.start(robotInfoVo);
-        });
+        Thread qqRunThread = new Thread(() -> robotServerStarter.start(robotInfoVo));
         qqRunThread.setDaemon(true);
         qqRunThread.setName("QQ机器人服务运行线程");
         qqRunThread.start();
@@ -74,7 +72,7 @@ public class RobotController {
             }
             try {
                 // 关闭机器人运行
-                Bot.getInstances().stream().forEach(bot -> bot.close(null));
+                Bot.getInstances().forEach(bot -> bot.close(null));
                 // 取消所有计划任务
                 pluginJobHandler.cancelAllTriggerTask();
             } catch (Exception e) {

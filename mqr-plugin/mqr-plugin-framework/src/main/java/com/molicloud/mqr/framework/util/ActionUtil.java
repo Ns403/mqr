@@ -30,6 +30,10 @@ public class ActionUtil {
      */
     public void handlerGroupAction(Group group, Action action) {
         if (action != null) {
+            if (action.getIsMuteAll() != null) {
+                group.getSettings().setMuteAll(action.getIsMuteAll());
+                return;
+            }
             List<String> ids = action.getIds();
             ContactList<NormalMember> memberContactList = group.getMembers();
             List<NormalMember> memberList = ids.stream().map(mid -> memberContactList.get(Long.parseLong(mid))).collect(Collectors.toList());

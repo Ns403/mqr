@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.action.KickAction;
 import com.molicloud.mqr.plugin.core.action.MuteAction;
 import com.molicloud.mqr.plugin.core.action.UnmuteAction;
@@ -45,11 +46,11 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
     /**
      * 指令列表
      */
-    private final String[] commands = {"禁言", "解禁", "踢人"};
+    private final String[] commands = {"禁言", "解禁", "踢人","全体禁言" ,"解除全体禁言"};
 
     @PHook(name = "Manager",
             listeningAllMessage = true,
-            startsKeywords = { "禁言", "解禁", "踢人" },
+            startsKeywords = { "禁言", "解禁", "踢人","全体禁言" ,"解除全体禁言"},
             equalsKeywords = { "开启自动入群", "关闭自动入群", "开启入群欢迎", "关闭入群欢迎", "设置入群欢迎语" },
             robotEvents = { RobotEventEnum.GROUP_MSG, RobotEventEnum.MEMBER_JOIN, RobotEventEnum.MEMBER_JOIN_REQUEST })
     public PluginResult messageHandler(PluginParam pluginParam) {
@@ -136,21 +137,29 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
         String command = getCommand(message);
         List<AtDef> atDefs = pluginParam.getAts();
         ids = atDefs.stream().map(AtDef::getId).distinct().collect(Collectors.toList());
-        if (ids.isEmpty()) {
+        boolean muteAll = !("全体禁言".equals(command) || "解除全体禁言".equals(command));
+        if (ids.isEmpty()&&muteAll ) {
             pluginResult.setMessage("未选择操作对象");
             return pluginResult;
         }
+        pluginResult.setMessage("操作成功");
         switch (command) {
             case "禁言":
                 return mute(pluginResult, getArgsContent(atDefs, message));
             case "解禁":
                 pluginResult.setAction(new UnmuteAction(ids));
                 break;
+            case "全体禁言":
+                pluginResult.setAction(Action.builder().isMuteAll(true).build());
+                break;
+            case "解除全体禁言":
+                pluginResult.setAction(Action.builder().isMuteAll(false).build());
+                break;
             case "踢人":
                 pluginResult.setAction(new KickAction(ids));
+            default:
+                pluginResult.setMessage("未执行任何操作");
         }
-        pluginResult.setMessage("操作成功");
-
         return pluginResult;
     }
 
@@ -226,16 +235,19 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
         }
         Integer seconds;
         String arg = args.replaceAll("[^\\u4e00-\\u9fa5]", "");
-        String value = getArgNum(args);
+        String[] argsArr = args.split(" ");
+        if (argsArr.length==1) {
+            pluginResult.setMessage("禁言格式错误，请按照'禁言 @群友 时间'设置");
+            return pluginResult;
+        }
+        String days = argsArr[argsArr.length - 1];
+        String value = getArgNum(days);
         if (value.isEmpty() || !isInteger(value)) {
             pluginResult.setMessage("禁言时间错误");
             return pluginResult;
         }
         Integer val = Integer.valueOf(value);
         switch (arg) {
-            case "秒":
-                seconds = val;
-                break;
             case "分钟":
                 seconds = val * 60;
                 break;

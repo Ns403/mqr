@@ -1,8 +1,11 @@
 package com.molicloud.mqr.plugin.adblock;
 
+import com.beust.jcommander.internal.Lists;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.action.Action;
+import com.molicloud.mqr.plugin.core.action.MuteAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.define.FaceDef;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
@@ -30,7 +33,7 @@ public class AdblockPluginExecutor extends AbstractPluginExecutor {
             "日赚", "月赚", "招收", "招商"
     };
 
-    private static final String warnContent = "请勿发送广告或违法信息";
+    private static final String warnContent = "请勿发送广告或违法信息，禁言1分钟";
 
     @PHook(name = "Adblock",
             listeningAllMessage = true,
@@ -48,6 +51,7 @@ public class AdblockPluginExecutor extends AbstractPluginExecutor {
                     ats.setContent(warnContent);
                     messageBuild.append(ats);
                     messageBuild.append(new Expression(FaceDef.zuohengheng));
+                    pluginResult.setAction(new MuteAction(Lists.newArrayList(pluginParam.getFrom()), 60));
                     pluginResult.setMessage(messageBuild);
                 } else {
                     pluginResult.setMessage(warnContent);

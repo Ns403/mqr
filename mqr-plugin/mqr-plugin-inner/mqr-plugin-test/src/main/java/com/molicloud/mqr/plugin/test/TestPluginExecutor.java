@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class TestPluginExecutor extends AbstractPluginExecutor {
 
     @PHook(name = "Test", equalsKeywords = {
-            "test",
+            "雷雷直播",
     }, robotEvents = {
             RobotEventEnum.FRIEND_MSG,
             RobotEventEnum.GROUP_MSG,
