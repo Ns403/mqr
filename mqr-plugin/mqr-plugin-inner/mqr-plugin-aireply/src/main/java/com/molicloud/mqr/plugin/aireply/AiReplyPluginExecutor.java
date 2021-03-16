@@ -135,6 +135,10 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         if (CollUtil.isNotEmpty(messageEvent.getToIds())) {
             Integer hour = LocalTime.now().getHour();
             String name = aiRepltSetting == null || StrUtil.isBlank(aiRepltSetting.getTimerName()) ? "茉莉" : aiRepltSetting.getTimerName();
+            String resultMsg = getTipByHour(hour, name);
+            if (StringUtils.isEmpty(resultMsg)) {
+                return;
+            }
             messageEvent.setMessage(getTipByHour(hour, name));
             pushMessage(messageEvent);
         }
@@ -156,7 +160,7 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
             Integer hour = LocalTime.now().getHour();
             messageEvent.setAction(Action.builder().isMuteAll(false).build());
-            messageEvent.setMessage(String.format("宵禁结束：%s", hour));
+            messageEvent.setMessage(String.format("%s宵禁结束！", hour));
             pushMessage(messageEvent);
         }
     }
@@ -168,7 +172,7 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
             Integer hour = LocalTime.now().getHour();
             messageEvent.setAction(Action.builder().isMuteAll(true).build());
-            messageEvent.setMessage(String.format("开始宵禁：%s", hour));
+            messageEvent.setMessage(String.format("%s点开始宵禁！", hour));
             pushMessage(messageEvent);
         }
     }
@@ -184,24 +188,24 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
             case 0:
                 tip = "穿过挪威的森林，让我走进你梦里，夕阳落在我的铠甲，王子不一定骑白马，黑马王子四海为家。\r\n我是" + name + "，现在是凌晨十二点。";
                 break;
-            case 1:
-                tip = "凌晨一点了，你还瞪起眼睛像铜铃，如果实在睡不着，那就来找我聊天试试。";
-                break;
-            case 2:
-                tip = "凌晨两点了你咋个还没睡哦，这个世界上有很多爱你的人，所以你也要好好爱你个人哦。";
-                break;
-            case 3:
-                tip = "所有在梦想面前受的伤都可以忽略不计，如果我做得到，那你也可以，现在凌晨三点钟。";
-                break;
-            case 4:
-                tip = "上帝关上门肯定会为你开窗，记得有我给你们加油打气，我是" + name + "，现在是凌晨四点整。";
-                break;
-            case 5:
-                tip = "你的人生目标找到没，是不是还觉得世界不公平，不要害怕，有一天你也会闪闪发光，现在是清晨5点。";
-                break;
-            case 6:
-                tip = "我们用爱和希望来给世界做点缀，走在沙漠也会像在花丛中一样，现在是早上六点。";
-                break;
+//            case 1:
+//                tip = "凌晨一点了，你还瞪起眼睛像铜铃，如果实在睡不着，那就来找我聊天试试。";
+//                break;
+//            case 2:
+//                tip = "凌晨两点了你咋个还没睡哦，这个世界上有很多爱你的人，所以你也要好好爱你个人哦。";
+//                break;
+//            case 3:
+//                tip = "所有在梦想面前受的伤都可以忽略不计，如果我做得到，那你也可以，现在凌晨三点钟。";
+//                break;
+//            case 4:
+//                tip = "上帝关上门肯定会为你开窗，记得有我给你们加油打气，我是" + name + "，现在是凌晨四点整。";
+//                break;
+//            case 5:
+//                tip = "你的人生目标找到没，是不是还觉得世界不公平，不要害怕，有一天你也会闪闪发光，现在是清晨5点。";
+//                break;
+//            case 6:
+//                tip = "我们用爱和希望来给世界做点缀，走在沙漠也会像在花丛中一样，现在是早上六点。";
+//                break;
             case 7:
                 tip = "现在是早上7点，" + name + "问候你早安。\r\n早餐是大脑活动的能量之源，请勿空腹开启一天的工作，早餐您吃了吗？";
                 break;
