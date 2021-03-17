@@ -19,8 +19,7 @@ import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -60,6 +59,7 @@ public class EventListeningHandler extends SimpleListenerHost {
             pluginParam.setFrom(String.valueOf(event.getSender().getId()));
             pluginParam.setTo(String.valueOf(event.getGroup().getId()));
             pluginParam.setData(event.getMessage().contentToString());
+            pluginParam.setMessage(event.getMessage());
             pluginParam.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
             // 获取消息中的At信息
             List<AtDef> atDefs = new LinkedList<>();

@@ -1,6 +1,7 @@
 package com.molicloud.mqr.framework.util;
 
 import cn.hutool.core.collection.CollUtil;
+import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.action.KickAction;
 import com.molicloud.mqr.plugin.core.action.MuteAction;
@@ -8,6 +9,9 @@ import com.molicloud.mqr.plugin.core.action.UnmuteAction;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.contact.*;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageSource;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,11 +28,11 @@ public class ActionUtil {
 
     /**
      * 处理群动作
-     *
-     * @param group
+     *  @param group
      * @param action
+     * @param pluginParam
      */
-    public void handlerGroupAction(Group group, Action action) {
+    public void handlerGroupAction(Group group, Action action, PluginParam pluginParam) {
         if (action != null) {
             if (action.getIsMuteAll() != null) {
                 group.getSettings().setMuteAll(action.getIsMuteAll());
@@ -44,6 +48,11 @@ public class ActionUtil {
                 } else if (action instanceof UnmuteAction) {
                     memberList.stream().forEach(member -> member.unmute());
                 } else if (action instanceof KickAction) {
+                    //踢人逻辑处理
+                    if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
+                        MessageChain message = (MessageChain) pluginParam.getMessage();
+                        MessageSource.recall(message);
+                    }
                     memberList.stream().forEach(member -> member.kick(""));
                 }
             }

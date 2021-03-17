@@ -81,7 +81,7 @@ public class PluginResultListener {
             }
         }
         if (pluginResult.getAction() != null) {
-            ActionUtil.handlerGroupAction(group, pluginResult.getAction());
+            ActionUtil.handlerGroupAction(group, pluginResult.getAction(),pluginParam);
         }
         // 持有/释放插件钩子
         if (PluginHookUtil.actionGroupMemberPluginHook(pluginParam.getTo(), pluginParam.getFrom(), hookName, pluginParam.getData().toString(), pluginResult.getHold())) {

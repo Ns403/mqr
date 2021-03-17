@@ -72,7 +72,7 @@ public class PluginMessageListener {
             }
         }
         if (action != null) {
-            ActionUtil.handlerGroupAction(group, action);
+            ActionUtil.handlerGroupAction(group, action, null);
         }
     }
 

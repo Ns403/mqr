@@ -48,6 +48,10 @@ public class PluginParam<T> {
      * 发送的消息体
      */
     private T data;
+    /**
+     * 发送的消息体
+     */
+    private T message;
 
     /**
      * 持有的消息

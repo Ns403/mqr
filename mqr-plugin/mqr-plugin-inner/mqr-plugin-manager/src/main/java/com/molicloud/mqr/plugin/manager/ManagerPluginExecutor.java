@@ -132,6 +132,8 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
                 pluginResult.setHold(true);
                 pluginResult.setMessage(ats);
                 return pluginResult;
+            default:
+                break;
         }
 
         String command = getCommand(message);
@@ -157,6 +159,7 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
                 break;
             case "踢人":
                 pluginResult.setAction(new KickAction(ids));
+                break;
             default:
                 pluginResult.setMessage("未执行任何操作");
         }
