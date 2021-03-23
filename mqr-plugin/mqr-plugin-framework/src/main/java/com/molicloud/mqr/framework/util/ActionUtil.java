@@ -2,10 +2,7 @@ package com.molicloud.mqr.framework.util;
 
 import cn.hutool.core.collection.CollUtil;
 import com.molicloud.mqr.plugin.core.PluginParam;
-import com.molicloud.mqr.plugin.core.action.Action;
-import com.molicloud.mqr.plugin.core.action.KickAction;
-import com.molicloud.mqr.plugin.core.action.MuteAction;
-import com.molicloud.mqr.plugin.core.action.UnmuteAction;
+import com.molicloud.mqr.plugin.core.action.*;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.contact.*;
@@ -54,6 +51,13 @@ public class ActionUtil {
                         MessageSource.recall(message);
                     }
                     memberList.stream().forEach(member -> member.kick(""));
+                } else if (action instanceof MuteAndRecallAction){
+                    int seconds = 60 * 60 * 24 * 30;
+                    memberList.forEach(member -> member.mute(seconds));
+                    if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
+                        MessageChain message = (MessageChain) pluginParam.getMessage();
+                        MessageSource.recall(message);
+                    }
                 }
             }
         }

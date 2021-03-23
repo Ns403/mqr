@@ -22,10 +22,12 @@ public class DeviceUtil {
      * 获取机器人设备信息的JSON字符串
      *
      * @return
+     * @param deviceInfoPath
      */
-    public String getDeviceInfoJson() {
+    public String getDeviceInfoJson(String deviceInfoPath) {
         // 设备信息文件
-        File file = new File("deviceInfo-".concat(RobotContextHolder.getRobot().getQq()).concat(".json"));
+        String path = String.format("%s/deviceInfo-%s.json", deviceInfoPath, RobotContextHolder.getRobot().getQq());
+        File file = new File(path);
         String deviceInfoJson = null;
         if (file.exists()) {
             FileReader fileReader = new FileReader(file);

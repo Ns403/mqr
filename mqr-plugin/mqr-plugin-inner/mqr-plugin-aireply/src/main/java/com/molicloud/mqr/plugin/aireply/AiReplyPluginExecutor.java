@@ -7,6 +7,7 @@ import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
 import com.molicloud.mqr.plugin.core.RobotContextHolder;
 import com.molicloud.mqr.plugin.core.action.Action;
+import com.molicloud.mqr.plugin.core.action.MuteAndRecallAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.annotation.PJob;
 import com.molicloud.mqr.plugin.core.define.RobotDef;

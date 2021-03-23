@@ -54,8 +54,9 @@ public class RobotServerStarter {
      * 启动机器人服务
      *
      * @param robotInfoVo
+     * @param deviceInfoPath
      */
-    public void start(RobotInfoVo robotInfoVo) {
+    public void start(RobotInfoVo robotInfoVo, String deviceInfoPath) {
         // 设置线程上下文中的机器人信息
         RobotDef robotDef = new RobotDef();
         BeanUtils.copyProperties(robotInfoVo, robotDef);
@@ -66,7 +67,7 @@ public class RobotServerStarter {
                 /**
                  * 加载设备信息
                  */
-                loadDeviceInfoJson(DeviceUtil.getDeviceInfoJson());
+                loadDeviceInfoJson(DeviceUtil.getDeviceInfoJson(deviceInfoPath));
 
                 /**
                  * 自定义登录验证处理器

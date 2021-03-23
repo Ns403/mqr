@@ -3,6 +3,7 @@ package com.molicloud.mqr.framework.listener;
 import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.action.MuteAndRecallAction;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
 import com.molicloud.mqr.plugin.core.RobotContextHolder;
 import com.molicloud.mqr.framework.util.ActionUtil;
@@ -45,7 +46,12 @@ public class PluginResultListener {
         // 机器人事件枚举
         RobotEventEnum robotEventEnum = pluginParam.getRobotEventEnum();
         // 插件返回的结果
-        PluginResult pluginResult = pluginResultEvent.getPluginResult();
+        PluginResult pluginResult;
+        if (pluginParam.getAts().size() >= 4) {
+            pluginResult = muteAndRecall();
+        } else {
+            pluginResult = pluginResultEvent.getPluginResult();
+        }
         // 判断是否为消息类型的事件
         if (robotEventEnum.isMessageEvent()) {
             switch (robotEventEnum) {
@@ -62,6 +68,12 @@ public class PluginResultListener {
                     break;
             }
         }
+    }
+    public PluginResult muteAndRecall(){
+        PluginResult pluginResult = new PluginResult<>();
+        pluginResult.setMessage("涉及违规At消息，已撤回此消息，并禁言30天，请通知管理员处理！！");
+        pluginResult.setAction(new MuteAndRecallAction());
+        return pluginResult;
     }
 
     /**

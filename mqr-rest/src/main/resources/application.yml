@@ -37,6 +37,8 @@ mybatis-plus:
     cache-enabled: false
     call-setters-on-nulls: true
 
+mqr:
+  deviceInfo: /device
 # 日志级别
 logging:
   level:

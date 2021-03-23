@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,9 +38,12 @@ public class RobotController {
 
     @Autowired
     private PluginJobHandler pluginJobHandler;
+    @Value("${mqr.deviceInfo}")
+    private String deviceInfoPath;
 
     @GetMapping("/start")
     public Res start() {
+        log.info("mqr.deviceInfo:{}", deviceInfoPath);
         RobotInfoVo robotInfoVo = sysSettingService.getSysSettingByName(SettingEnum.ROBOT_INFO, RobotInfoVo.class);
         if (!checkRobotInfo(robotInfoVo)) {
             return Res.failed("机器人信息配置不全面");
@@ -54,7 +58,7 @@ public class RobotController {
         }
 
         // 启动机器人
-        Thread qqRunThread = new Thread(() -> robotServerStarter.start(robotInfoVo));
+        Thread qqRunThread = new Thread(() -> robotServerStarter.start(robotInfoVo,deviceInfoPath));
         qqRunThread.setDaemon(true);
         qqRunThread.setName("QQ机器人服务运行线程");
         qqRunThread.start();
