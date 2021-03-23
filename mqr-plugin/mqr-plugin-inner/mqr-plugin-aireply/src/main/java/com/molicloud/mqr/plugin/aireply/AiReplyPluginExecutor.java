@@ -102,6 +102,12 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
             saveHookSetting(aiRepltSetting);
             return pluginResult;
         }
+        if (pluginParam.getAts().size() >= 10) {
+            pluginResult.setMessage("涉及违规At消息，已撤回此消息，并禁言30天，请通知管理员处理！！");
+            pluginResult.setAction(new MuteAndRecallAction(pluginParam.getFrom()));
+            pluginResult.setProcessed(true);
+            return pluginResult;
+        }
 
         // 获取聊天前缀
         String prefix = aiRepltSetting.getPrefix();
