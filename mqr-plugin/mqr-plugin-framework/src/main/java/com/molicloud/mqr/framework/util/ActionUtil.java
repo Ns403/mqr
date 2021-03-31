@@ -30,7 +30,11 @@ public class ActionUtil {
      * @param pluginParam
      */
     public void handlerGroupAction(Group group, Action action, PluginParam pluginParam) {
-        if (action != null) {
+        try {
+            if (action == null) {
+                log.info("没有任何操作");
+                return;
+            }
             if (action.getIsMuteAll() != null) {
                 group.getSettings().setMuteAll(action.getIsMuteAll());
                 return;
@@ -38,28 +42,32 @@ public class ActionUtil {
             List<String> ids = action.getIds();
             ContactList<NormalMember> memberContactList = group.getMembers();
             List<NormalMember> memberList = ids.stream().map(mid -> memberContactList.get(Long.parseLong(mid))).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(memberList)) {
-                if (action instanceof MuteAction) {
-                    MuteAction muteAction = (MuteAction) action;
-                    memberList.stream().forEach(member -> member.mute(muteAction.getSeconds()));
-                } else if (action instanceof UnmuteAction) {
-                    memberList.stream().forEach(member -> member.unmute());
-                } else if (action instanceof KickAction) {
-                    //踢人逻辑处理
-                    if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
-                        MessageChain message = (MessageChain) pluginParam.getMessage();
-                        MessageSource.recall(message);
-                    }
-                    memberList.stream().forEach(member -> member.kick(""));
-                } else if (action instanceof MuteAndRecallAction){
-                    int seconds = 60 * 60 * 24 * 30;
-                    memberList.forEach(member -> member.mute(seconds));
-                    if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
-                        MessageChain message = (MessageChain) pluginParam.getMessage();
-                        MessageSource.recall(message);
-                    }
+            if (CollUtil.isEmpty(memberList)) {
+                log.info("没有禁言用户");
+                return;
+            }
+            if (action instanceof MuteAction) {
+                MuteAction muteAction = (MuteAction) action;
+                memberList.stream().forEach(member -> member.mute(muteAction.getSeconds()));
+            } else if (action instanceof UnmuteAction) {
+                memberList.stream().forEach(member -> member.unmute());
+            } else if (action instanceof KickAction) {
+                //踢人逻辑处理
+                if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
+                    MessageChain message = (MessageChain) pluginParam.getMessage();
+                    MessageSource.recall(message);
+                }
+                memberList.stream().forEach(member -> member.kick(""));
+            } else if (action instanceof MuteAndRecallAction){
+                int seconds = 60 * 60 * 24 * 30;
+                memberList.forEach(member -> member.mute(seconds));
+                if (pluginParam != null && pluginParam.getMessage() instanceof Message) {
+                    MessageChain message = (MessageChain) pluginParam.getMessage();
+                    MessageSource.recall(message);
                 }
             }
+        } catch (Exception e) {
+            log.info("handlerGroupAction 异常处理：可能没有权限",e);
         }
     }
 
