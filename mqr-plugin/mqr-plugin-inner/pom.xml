@@ -16,7 +16,6 @@
         <module>mqr-plugin-aireply</module>
         <module>mqr-plugin-adblock</module>
         <module>mqr-plugin-divination</module>
-        <module>mqr-plugin-joke</module>
         <module>mqr-plugin-qrcode</module>
         <module>mqr-plugin-manager</module>
         <module>mqr-plugin-signin</module>
