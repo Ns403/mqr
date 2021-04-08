@@ -21,6 +21,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -55,7 +56,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         ats.setMids(Arrays.asList(pluginParam.getFrom()));
 
         // 判断今天是否有签到
-        if (getTodaySignInCount(pluginParam.getTo(), pluginParam.getFrom()) >= 1) {
+        if (getTodaySignInCount(pluginParam.getTo(), pluginParam.getFrom())) {
             ats.setContent("你今天已经签到过啦，明天再来吧～");
             messageBuild.append(ats);
             pluginResult.setMessage(messageBuild);
@@ -149,12 +150,12 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
      * @param qq      消息来源QQ
      * @return
      */
-    private Integer getTodaySignInCount(String groupId, String qq) {
-        return mapper.selectCount(Wrappers.<RobotPluginSignIn>lambdaQuery()
+    private Boolean getTodaySignInCount(String groupId, String qq) {
+        RobotPluginSignIn robotPluginSignIn = mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
                 .eq(RobotPluginSignIn::getGroupId, groupId)
                 .eq(RobotPluginSignIn::getQq, qq)
-                .likeRight(RobotPluginSignIn::getCreateTime, new SimpleDateFormat("yyyy-MM-dd").format(new Date()))
-        );
+                .ge(RobotPluginSignIn::getCreateTime, LocalDate.now()));
+        return robotPluginSignIn != null;
     }
 
     /**
