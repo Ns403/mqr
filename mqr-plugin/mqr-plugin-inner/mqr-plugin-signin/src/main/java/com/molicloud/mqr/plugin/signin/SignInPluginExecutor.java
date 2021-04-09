@@ -59,48 +59,51 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         RobotPluginSignIn signInRecord = getNewSignInRecord(pluginParam.getTo(), pluginParam.getFrom());
         Ats ats = new Ats();
         ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
-
+        messageBuild.append(ats);
         //没有为首次签到
         if (Objects.isNull(signInRecord)) {
+            String hitokoto = hitokoto();
             RobotPluginSignIn signInLog = new RobotPluginSignIn();
             signInLog.setQq(pluginParam.getFrom());
             signInLog.setGroupId(pluginParam.getTo());
             signInLog.setIsContinuity(false);
             signInLog.setNum(1);
+            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild,hitokoto);
             mapper.insert(signInLog);
-            MessageBuild resultBuild = getResultBuild(1, signInLog, pluginParam,ats);
             pluginResult.setMessage(resultBuild);
+            return pluginResult;
         }
         //有判断是不是今天签到
-        LocalDate localDate = signInRecord.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate localDate = signInRecord.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();;
         LocalDate now = LocalDate.now();
 
         if (now.equals(localDate)) {
             ats.setContent("你今天已经签到过啦，明天再来吧～");
-            messageBuild.append(ats);
             pluginResult.setMessage(messageBuild);
         }else{
-            signInRecord.setUpdateTime(new Date());
-            signInRecord.setIsContinuity(now.minusDays(1).equals(localDate));
-            signInRecord.setNum(signInRecord.getNum()+1);
-            mapper.updateById(signInRecord);
-            MessageBuild resultBuild = getResultBuild(signInRecord.getNum(), signInRecord, pluginParam,ats);
+            String hitokoto = hitokoto();
+            boolean continuousSign = now.minusDays(1).equals(localDate);
+            signInRecord = RobotPluginSignIn.builder()
+                    .id(signInRecord.getId())
+                    .num(continuousSign ? signInRecord.getNum() + 1 : 1)
+                    .isContinuity(continuousSign).build();
+            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild,hitokoto);
             pluginResult.setMessage(resultBuild);
+            signInRecord.setUpdateTime(new Date());
+            mapper.updateById(signInRecord);
         }
         return pluginResult;
     }
 
     /**
      * 构建饭回消息
-     * @param signCnt 签到次数
-     * @param signIn 保存
-     * @param pluginParam 参数
-     * @param ats at谁
+     *
+     * @param signIn       保存
+     * @param pluginParam  参数
+     * @param messageBuild 构建返回消息
      * @return 构建饭回
      */
-    private MessageBuild getResultBuild(Integer signCnt, RobotPluginSignIn signIn,PluginParam pluginParam,Ats ats) {
-        MessageBuild messageBuild = new MessageBuild();
-        messageBuild.append(ats);
+    private MessageBuild getResultBuild(RobotPluginSignIn signIn, PluginParam pluginParam, MessageBuild messageBuild, String hitokoto) {
         String content = "";
         int hour = LocalDateTime.now().getHour();
         if (hour <= 6) {
@@ -118,18 +121,16 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         if (hour > 18) {
             content = "晚上好，早点休息鸭～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
         }
-        String signStr = String.format(content, signCnt);
+        Integer todaySignInCnt = getTodaySignInCnt(pluginParam.getTo());
+        String signStr = String.format(content, todaySignInCnt+1);
         messageBuild.append(new Text(signStr));
-        LocalDate localDate = signIn.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate lastDate = LocalDate.now().minusDays(1);
-        //如果超出昨天算没有签
-        if (lastDate.equals(localDate)) {
-            int num = signIn.getNum() ;
-            String signCntStr = String.format("\r\n截止今日，你已经连续签到 %d 天啦！明天还要继续加油鸭～", num);
+        messageBuild.append(new Expression(FaceDef.meigui));
+        if (signIn.getIsContinuity()) {
+            //如果超出昨天算没有签
+            String signCntStr = String.format("\r\n截止今日，你已经连续签到 %d 天啦！明天还要继续加油鸭～", signIn.getNum());
             messageBuild.append(new Text(signCntStr));
         }
         // 一言
-        String hitokoto = hitokoto();
         messageBuild.append(new Text(String.format("\r\n今日份鸡汤「%s」", hitokoto)));
         return messageBuild;
     }
@@ -141,7 +142,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
      * @return 记录
      */
     private RobotPluginSignIn getNewSignInRecord(String groupId, String qq) {
-       return mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
+        return mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
                 .eq(RobotPluginSignIn::getGroupId, groupId)
                 .eq(RobotPluginSignIn::getQq, qq)
                 .orderByDesc(RobotPluginSignIn::getUpdateTime));
@@ -158,68 +159,6 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                 .ge(RobotPluginSignIn::getUpdateTime, LocalDate.now()));
     }
     /**
-     * 判断昨天有没有签到
-     *
-     * @param groupId 群号
-     * @param qq      消息来源QQ
-     * @return
-     */
-    private Boolean isYesterdaySignIn(String groupId, String qq) {
-        return mapper.selectCount(Wrappers.<RobotPluginSignIn>lambdaQuery()
-                .eq(RobotPluginSignIn::getGroupId, groupId)
-                .eq(RobotPluginSignIn::getQq, qq)
-                .likeRight(
-                        RobotPluginSignIn::getCreateTime,
-                        new SimpleDateFormat("yyyy-MM-dd").format(
-                                new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24)
-                        )
-                )
-        ) >= 1;
-    }
-
-    /**
-     * 获取今日签到次数
-     *
-     * @param groupId 群号
-     * @param qq      消息来源QQ
-     * @return
-     */
-    private Boolean getTodaySignInCount(String groupId, String qq) {
-        RobotPluginSignIn robotPluginSignIn = mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
-                .eq(RobotPluginSignIn::getGroupId, groupId)
-                .eq(RobotPluginSignIn::getQq, qq)
-                .ge(RobotPluginSignIn::getCreateTime, LocalDate.now()));
-        return robotPluginSignIn != null;
-    }
-
-    /**
-     * 获取今日签到人数
-     *
-     * @param groupId 群号
-     * @return
-     */
-    private Integer getTodaySignInNum(String groupId) {
-        return mapper.selectCount(Wrappers.<RobotPluginSignIn>lambdaQuery()
-                .eq(RobotPluginSignIn::getGroupId, groupId)
-                .likeRight(RobotPluginSignIn::getCreateTime, new SimpleDateFormat("yyyy-MM-dd").format(new Date()))
-        );
-    }
-
-    /**
-     * 获取全部签到次数
-     *
-     * @param groupId 群号
-     * @param qq      消息来源QQ
-     * @return
-     */
-    private Integer getSignInCount(String groupId, String qq) {
-        return mapper.selectCount(Wrappers.<RobotPluginSignIn>lambdaQuery()
-                .eq(RobotPluginSignIn::getGroupId, groupId)
-                .eq(RobotPluginSignIn::getQq, qq)
-        );
-    }
-
-    /**
      * 一言
      *
      * @return
@@ -233,7 +172,6 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         }
         return content;
     }
-
     @Override
     public PluginInfo getPluginInfo() {
         PluginInfo pluginInfo = new PluginInfo();
@@ -249,7 +187,6 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                         "  \"qq\" VARCHAR(50) NOT NULL," +
                         "  \"is_continuity\" BIT(1) NOT NULL DEFAULT 0," +
                         "  \"num\" INTEGER NOT NULL DEFAULT 0," +
-                        "  \"motto\" TEXT NOT NULL," +
                         "  \"update_time\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                         "  \"create_time\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
                         ");");
