@@ -63,11 +63,13 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         //没有为首次签到
         if (Objects.isNull(signInRecord)) {
             String hitokoto = hitokoto();
-            RobotPluginSignIn signInLog = new RobotPluginSignIn();
-            signInLog.setQq(pluginParam.getFrom());
-            signInLog.setGroupId(pluginParam.getTo());
-            signInLog.setIsContinuity(false);
-            signInLog.setNum(1);
+            RobotPluginSignIn signInLog = RobotPluginSignIn.builder()
+                    .qq(pluginParam.getFrom())
+                    .groupId(pluginParam.getTo())
+                    .isContinuity(false)
+                    .num(1)
+                    .createTime(new Date())
+                    .updateTime(new Date()).build();
             MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild,hitokoto);
             mapper.insert(signInLog);
             pluginResult.setMessage(resultBuild);
