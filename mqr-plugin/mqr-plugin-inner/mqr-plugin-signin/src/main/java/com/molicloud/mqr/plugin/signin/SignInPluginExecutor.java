@@ -15,6 +15,7 @@ import com.molicloud.mqr.plugin.core.message.make.Text;
 import com.molicloud.mqr.plugin.signin.entity.RobotPluginSignIn;
 import com.molicloud.mqr.plugin.signin.mapper.RobotPluginSignInMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
@@ -22,9 +23,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 签到插件
@@ -51,78 +55,108 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         PluginResult pluginResult = new PluginResult();
         MessageBuild messageBuild = new MessageBuild();
         pluginResult.setProcessed(true);
-
+        //查询出是否有打卡记录
+        RobotPluginSignIn signInRecord = getNewSignInRecord(pluginParam.getTo(), pluginParam.getFrom());
         Ats ats = new Ats();
-        ats.setMids(Arrays.asList(pluginParam.getFrom()));
+        ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
 
-        // 判断今天是否有签到
-        if (getTodaySignInCount(pluginParam.getTo(), pluginParam.getFrom())) {
+        //没有为首次签到
+        if (Objects.isNull(signInRecord)) {
+            RobotPluginSignIn signInLog = new RobotPluginSignIn();
+            signInLog.setQq(pluginParam.getFrom());
+            signInLog.setGroupId(pluginParam.getTo());
+            signInLog.setIsContinuity(false);
+            signInLog.setNum(1);
+            mapper.insert(signInLog);
+            MessageBuild resultBuild = getResultBuild(1, signInLog, pluginParam,ats);
+            pluginResult.setMessage(resultBuild);
+        }
+        //有判断是不是今天签到
+        LocalDate localDate = signInRecord.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate now = LocalDate.now();
+
+        if (now.equals(localDate)) {
             ats.setContent("你今天已经签到过啦，明天再来吧～");
             messageBuild.append(ats);
             pluginResult.setMessage(messageBuild);
-            return pluginResult;
+        }else{
+            signInRecord.setUpdateTime(new Date());
+            signInRecord.setIsContinuity(now.minusDays(1).equals(localDate));
+            signInRecord.setNum(signInRecord.getNum()+1);
+            mapper.updateById(signInRecord);
+            MessageBuild resultBuild = getResultBuild(signInRecord.getNum(), signInRecord, pluginParam,ats);
+            pluginResult.setMessage(resultBuild);
         }
-
-        // 昨天签到人数
-        Integer todaySignInNum = getTodaySignInNum(pluginParam.getTo());
-        // 昨天是否签到
-        Boolean isYesterdaySignIn = isYesterdaySignIn(pluginParam.getTo(), pluginParam.getFrom());
-        // 一言
-        String hitokoto = hitokoto();
-        String content = "";
-
-        SimpleDateFormat df = new SimpleDateFormat("HH");
-        String str = df.format(new Date());
-        int a = Integer.parseInt(str);
-        if (a >= 0 && a <= 6) {
-            content = "早上好，今天又是充满元气的一天喔～";
-        }
-        if (a > 6 && a <= 12) {
-            content = "上午好，今天有多喝水吗？";
-        }
-        if (a == 13) {
-            content = "中午好，午饭要吃的饱饱的，要记得午睡喔～";
-        }
-        if (a > 13 && a <= 18) {
-            content = "下午好，一天已经过去一半啦！";
-        }
-        if (a > 18 && a <= 24) {
-            content = "晚上好，早点休息鸭～";
-        }
-
-        content += String.format("\r\n签到成功～，今天你是第 %d 个签到的哟～", todaySignInNum + 1);
-        ats.setContent(content);
-        messageBuild.append(ats);
-        messageBuild.append(new Expression(FaceDef.meigui));
-
-        int num = 1; // 连续签到次数
-        // 判断是否是连续签到
-        if (isYesterdaySignIn) {
-            // 获取最近的一次签到
-            List<RobotPluginSignIn> list = mapper.selectList(
-                    Wrappers.<RobotPluginSignIn>lambdaQuery().orderByDesc(RobotPluginSignIn::getId)
-                            .eq(RobotPluginSignIn::getGroupId, pluginParam.getTo())
-                            .eq(RobotPluginSignIn::getQq, pluginParam.getFrom())
-            );
-            RobotPluginSignIn newestSignIn = list.get(0);
-            num = newestSignIn.getNum() + 1;
-            messageBuild.append(new Text(String.format("\r\n截止今日，你已经连续签到 %d 天啦！明天还要继续加油鸭～", num)));
-        }
-
-        messageBuild.append(new Text(String.format("\r\n今日份鸡汤「%s」", hitokoto)));
-
-        pluginResult.setMessage(messageBuild);
-        RobotPluginSignIn signInLog = new RobotPluginSignIn();
-        signInLog.setQq(pluginParam.getFrom());
-        signInLog.setGroupId(pluginParam.getTo());
-        signInLog.setIsContinuity(num > 1);
-        signInLog.setMotto(hitokoto);
-        signInLog.setNum(num);
-        mapper.insert(signInLog);
-
         return pluginResult;
     }
 
+    /**
+     * 构建饭回消息
+     * @param signCnt 签到次数
+     * @param signIn 保存
+     * @param pluginParam 参数
+     * @param ats at谁
+     * @return 构建饭回
+     */
+    private MessageBuild getResultBuild(Integer signCnt, RobotPluginSignIn signIn,PluginParam pluginParam,Ats ats) {
+        MessageBuild messageBuild = new MessageBuild();
+        messageBuild.append(ats);
+        String content = "";
+        int hour = LocalDateTime.now().getHour();
+        if (hour <= 6) {
+            content = "早上好，今天又是充满元气的一天喔～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
+        }
+        if (hour > 6 && hour <= 12) {
+            content = "上午好，今天有多喝水吗？\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
+        }
+        if (hour == 13) {
+            content = "中午好，午饭要吃的饱饱的，要记得午睡喔～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
+        }
+        if (hour > 13 && hour <= 18) {
+            content = "下午好，一天已经过去一半啦！\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
+        }
+        if (hour > 18) {
+            content = "晚上好，早点休息鸭～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
+        }
+        String signStr = String.format(content, signCnt);
+        messageBuild.append(new Text(signStr));
+        LocalDate localDate = signIn.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate lastDate = LocalDate.now().minusDays(1);
+        //如果超出昨天算没有签
+        if (lastDate.equals(localDate)) {
+            int num = signIn.getNum() ;
+            String signCntStr = String.format("\r\n截止今日，你已经连续签到 %d 天啦！明天还要继续加油鸭～", num);
+            messageBuild.append(new Text(signCntStr));
+        }
+        // 一言
+        String hitokoto = hitokoto();
+        messageBuild.append(new Text(String.format("\r\n今日份鸡汤「%s」", hitokoto)));
+        return messageBuild;
+    }
+
+    /**
+     * 获取发送者最新的打卡记录
+     * @param groupId qq群
+     * @param qq 发送者
+     * @return 记录
+     */
+    private RobotPluginSignIn getNewSignInRecord(String groupId, String qq) {
+       return mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
+                .eq(RobotPluginSignIn::getGroupId, groupId)
+                .eq(RobotPluginSignIn::getQq, qq)
+                .orderByDesc(RobotPluginSignIn::getUpdateTime));
+
+    }
+    /**
+     * 获取发送者最新的打卡记录
+     * @param groupId qq群
+     * @return 记录
+     */
+    private Integer getTodaySignInCnt(String groupId) {
+        return mapper.selectCount(Wrappers.<RobotPluginSignIn>lambdaQuery()
+                .eq(RobotPluginSignIn::getGroupId, groupId)
+                .ge(RobotPluginSignIn::getUpdateTime, LocalDate.now()));
+    }
     /**
      * 判断昨天有没有签到
      *
