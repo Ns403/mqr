@@ -4,6 +4,7 @@ import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
 import com.molicloud.mqr.plugin.core.action.MuteAndRecallAction;
+import com.molicloud.mqr.plugin.core.enums.MessageTypeEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
 import com.molicloud.mqr.plugin.core.RobotContextHolder;
 import com.molicloud.mqr.framework.util.ActionUtil;
@@ -11,11 +12,12 @@ import com.molicloud.mqr.framework.util.MessageUtil;
 import com.molicloud.mqr.framework.util.PluginHookUtil;
 import com.molicloud.mqr.service.RobotFriendService;
 import com.molicloud.mqr.service.RobotGroupMemberService;
+import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Friend;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Component;
  * @since 2020/11/12 10:42 上午
  */
 @Component
+@Slf4j
 public class PluginResultListener {
 
     @Autowired
@@ -43,6 +46,13 @@ public class PluginResultListener {
         Bot bot = Bot.getInstance(Long.parseLong(RobotContextHolder.getRobot().getQq()));
         // 插件入参
         PluginParam pluginParam = pluginResultEvent.getPluginParam();
+        //处理
+        log.info("sendMsg:{}",pluginParam.getData());
+        if (MessageTypeEnum.checkMsgType(String.valueOf(pluginParam.getData()))) {
+            MessageChain message = (MessageChain) pluginParam.getMessage();
+            MessageSource.recall(message);
+            return;
+        }
         // 机器人事件枚举
         RobotEventEnum robotEventEnum = pluginParam.getRobotEventEnum();
         // 插件返回的结果

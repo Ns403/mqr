@@ -114,7 +114,8 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         if (RobotEventEnum.GROUP_MSG.equals(pluginParam.getRobotEventEnum())
                 && StrUtil.isNotEmpty(prefix)
                 && !StrUtil.startWith(message, prefix)) {
-            pluginResult.setProcessed(false);
+            pluginResult.setProcessed(true);
+            return pluginResult;
         } else {
             String reply = "这是啥？";
             if (!StringUtils.isEmpty(message)) {

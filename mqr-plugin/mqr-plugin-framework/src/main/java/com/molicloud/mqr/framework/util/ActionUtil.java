@@ -37,6 +37,7 @@ public class ActionUtil {
             }
             if (action.getIsMuteAll() != null) {
                 group.getSettings().setMuteAll(action.getIsMuteAll());
+                Thread.sleep(1000);
                 return;
             }
             List<String> ids = action.getIds();

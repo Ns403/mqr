@@ -67,7 +67,7 @@ public class SignInTest {
         LocalDate now = LocalDate.now();
 
         if (now.equals(localDate)) {
-            ats.setContent("你今天已经签到过啦，明天再来吧～");
+            ats.setContent("你今天已经签到过啦，明儿再来吧～");
             pluginResult.setMessage(messageBuild);
         } else {
             String hitokoto = hitokoto();
