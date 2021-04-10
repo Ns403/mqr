@@ -147,7 +147,7 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
             if (StringUtils.isEmpty(resultMsg)) {
                 return;
             }
-            messageEvent.setMessage(getTipByHour(hour, name));
+            messageEvent.setMessage(resultMsg);
             pushMessage(messageEvent);
         }
     }

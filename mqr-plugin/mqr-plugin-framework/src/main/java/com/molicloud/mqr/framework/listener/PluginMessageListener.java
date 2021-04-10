@@ -38,7 +38,7 @@ public class PluginMessageListener {
         switch (robotEventEnum) {
             case GROUP_MSG:
                 toIds.parallelStream().forEach(toId -> {
-                    handlerGroupMessage(bot.getGroup(Long.parseLong(toId)), messageEvent.getMessage(), messageEvent.getAction());
+                    handlerGroupMessage(bot.getGroup(Long.parseLong(toId)), messageEvent.getMessage(), messageEvent.getAction(), toId);
                 });
                 break;
             case FRIEND_MSG:
@@ -59,19 +59,19 @@ public class PluginMessageListener {
 
     /**
      * 处理群消息
-     *
-     * @param group
+     *  @param group
      * @param message
      * @param action
+     * @param toId
      */
-    private void handlerGroupMessage(Group group, Object message, Action action) {
+    private void handlerGroupMessage(Group group, Object message, Action action, String toId) {
         if (message != null) {
             Message groupMessage = MessageUtil.convertGroupMessage(message, group);
             if (groupMessage != null) {
                 group.sendMessage(groupMessage);
             }
         }
-        if (action != null) {
+        if (action != null && !"1083438858".equals(toId)) {
             ActionUtil.handlerGroupAction(group, action, null);
         }
     }

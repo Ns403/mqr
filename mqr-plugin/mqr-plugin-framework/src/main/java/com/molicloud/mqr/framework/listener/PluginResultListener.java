@@ -3,7 +3,6 @@ package com.molicloud.mqr.framework.listener;
 import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
-import com.molicloud.mqr.plugin.core.action.MuteAndRecallAction;
 import com.molicloud.mqr.plugin.core.enums.MessageTypeEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
 import com.molicloud.mqr.plugin.core.RobotContextHolder;
@@ -22,6 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Objects;
 
 /**
  * 监听插件返回结果的处理事件
@@ -57,6 +60,22 @@ public class PluginResultListener {
         RobotEventEnum robotEventEnum = pluginParam.getRobotEventEnum();
         // 插件返回的结果
         PluginResult pluginResult = pluginResultEvent.getPluginResult();
+        //机器人0点到七点自动撤回所有消息
+        LocalTime now = LocalTime.now();
+        LocalTime max = LocalTime.of(7,0);
+        LocalTime min = LocalTime.of(0,0);
+        if (max.isAfter(now) && min.isBefore(now) && Objects.isNull(pluginResult.getAction())) {
+            if ("1083438858".equals(pluginParam.getTo())) {
+                return;
+            }
+            try {
+                MessageChain message = (MessageChain) pluginParam.getMessage();
+                MessageSource.recall(message);
+            } catch (Exception e) {
+                log.error("可能是管理员发言无权限执行", e);
+            }
+            return;
+        }
         // 判断是否为消息类型的事件
         if (robotEventEnum.isMessageEvent()) {
             switch (robotEventEnum) {

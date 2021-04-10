@@ -25,7 +25,7 @@ public class ActionUtil {
 
     /**
      * 处理群动作
-     *  @param group
+     * @param group
      * @param action
      * @param pluginParam
      */
@@ -37,7 +37,6 @@ public class ActionUtil {
             }
             if (action.getIsMuteAll() != null) {
                 group.getSettings().setMuteAll(action.getIsMuteAll());
-                Thread.sleep(1000);
                 return;
             }
             List<String> ids = action.getIds();

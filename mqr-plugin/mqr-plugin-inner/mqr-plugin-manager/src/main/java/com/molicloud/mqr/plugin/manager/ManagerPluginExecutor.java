@@ -144,7 +144,7 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
             pluginResult.setMessage("未选择操作对象");
             return pluginResult;
         }
-        pluginResult.setMessage("操作成功");
+        pluginResult.setMessage("已执行！");
         switch (command) {
             case "禁言":
                 return mute(pluginResult, getArgsContent(atDefs, message));
