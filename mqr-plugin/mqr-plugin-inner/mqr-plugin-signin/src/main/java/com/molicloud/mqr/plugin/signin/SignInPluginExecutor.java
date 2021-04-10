@@ -1,5 +1,6 @@
 package com.molicloud.mqr.plugin.signin;
 
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginInfo;
@@ -12,6 +13,7 @@ import com.molicloud.mqr.plugin.core.message.MessageBuild;
 import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.plugin.core.message.make.Expression;
 import com.molicloud.mqr.plugin.core.message.make.Text;
+import com.molicloud.mqr.plugin.core.util.DateUtil;
 import com.molicloud.mqr.plugin.signin.entity.RobotPluginSignIn;
 import com.molicloud.mqr.plugin.signin.mapper.RobotPluginSignInMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +23,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -68,30 +65,29 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                     .groupId(pluginParam.getTo())
                     .isContinuity(false)
                     .num(1)
-                    .createTime(new Date())
-                    .updateTime(new Date()).build();
-            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild,hitokoto);
+                    .updateTime(DateUtil.nowFormatLocalDate()).build();
+            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild, hitokoto);
             mapper.insert(signInLog);
             pluginResult.setMessage(resultBuild);
             return pluginResult;
         }
         //有判断是不是今天签到
-        LocalDate localDate = signInRecord.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();;
+        LocalDate localDate = DateUtil.parseLocalDate(signInRecord.getUpdateTime());
         LocalDate now = LocalDate.now();
 
         if (now.equals(localDate)) {
             ats.setContent("你今天已经签到过啦，明天再来吧～");
             pluginResult.setMessage(messageBuild);
-        }else{
+        } else {
             String hitokoto = hitokoto();
             boolean continuousSign = now.minusDays(1).equals(localDate);
             signInRecord = RobotPluginSignIn.builder()
                     .id(signInRecord.getId())
                     .num(continuousSign ? signInRecord.getNum() + 1 : 1)
                     .isContinuity(continuousSign).build();
-            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild,hitokoto);
+            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild, hitokoto);
             pluginResult.setMessage(resultBuild);
-            signInRecord.setUpdateTime(new Date());
+            signInRecord.setUpdateTime(DateUtil.nowFormatLocalDate());
             mapper.updateById(signInRecord);
         }
         return pluginResult;
@@ -124,7 +120,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
             content = "晚上好，早点休息鸭～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
         }
         Integer todaySignInCnt = getTodaySignInCnt(pluginParam.getTo());
-        String signStr = String.format(content, todaySignInCnt+1);
+        String signStr = String.format(content, todaySignInCnt + 1);
         messageBuild.append(new Text(signStr));
         messageBuild.append(new Expression(FaceDef.meigui));
         if (signIn.getIsContinuity()) {
@@ -139,8 +135,9 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
 
     /**
      * 获取发送者最新的打卡记录
+     *
      * @param groupId qq群
-     * @param qq 发送者
+     * @param qq      发送者
      * @return 记录
      */
     private RobotPluginSignIn getNewSignInRecord(String groupId, String qq) {
@@ -150,8 +147,10 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                 .orderByDesc(RobotPluginSignIn::getUpdateTime));
 
     }
+
     /**
      * 获取发送者最新的打卡记录
+     *
      * @param groupId qq群
      * @return 记录
      */
@@ -160,6 +159,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                 .eq(RobotPluginSignIn::getGroupId, groupId)
                 .ge(RobotPluginSignIn::getUpdateTime, LocalDate.now()));
     }
+
     /**
      * 一言
      *
@@ -174,6 +174,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         }
         return content;
     }
+
     @Override
     public PluginInfo getPluginInfo() {
         PluginInfo pluginInfo = new PluginInfo();
@@ -189,8 +190,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
                         "  \"qq\" VARCHAR(50) NOT NULL," +
                         "  \"is_continuity\" BIT(1) NOT NULL DEFAULT 0," +
                         "  \"num\" INTEGER NOT NULL DEFAULT 0," +
-                        "  \"update_time\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "  \"create_time\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                        "  \"update_time\" VARCHAR NOT NULL " +
                         ");");
         return pluginInfo;
     }

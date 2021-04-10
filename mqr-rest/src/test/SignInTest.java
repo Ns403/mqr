@@ -7,6 +7,7 @@ import com.molicloud.mqr.plugin.core.message.MessageBuild;
 import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.plugin.core.message.make.Expression;
 import com.molicloud.mqr.plugin.core.message.make.Text;
+import com.molicloud.mqr.plugin.core.util.DateUtil;
 import com.molicloud.mqr.plugin.signin.entity.RobotPluginSignIn;
 import com.molicloud.mqr.plugin.signin.mapper.RobotPluginSignInMapper;
 import org.assertj.core.util.Lists;
@@ -20,8 +21,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.Objects;
 
 @RunWith(SpringRunner.class)
@@ -31,13 +30,6 @@ public class SignInTest {
     private RobotPluginSignInMapper mapper;
     @Autowired
     private RestTemplate restTemplate;
-    private Boolean getTodaySignInCount(String groupId, String qq) {
-        RobotPluginSignIn robotPluginSignIn = mapper.selectOne(Wrappers.<RobotPluginSignIn>lambdaQuery()
-                .eq(RobotPluginSignIn::getGroupId, groupId)
-                .eq(RobotPluginSignIn::getQq, qq)
-                .ge(RobotPluginSignIn::getCreateTime, LocalDate.now()));
-        return robotPluginSignIn != null;
-    }
     @Test
     public void testMain(){
         PluginParam<Object> param = new PluginParam<>();
@@ -59,33 +51,34 @@ public class SignInTest {
         //没有为首次签到
         if (Objects.isNull(signInRecord)) {
             String hitokoto = hitokoto();
-            RobotPluginSignIn signInLog = new RobotPluginSignIn();
-            signInLog.setQq(pluginParam.getFrom());
-            signInLog.setGroupId(pluginParam.getTo());
-            signInLog.setIsContinuity(false);
-            signInLog.setNum(1);
-            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild,hitokoto);
+            RobotPluginSignIn signInLog = RobotPluginSignIn.builder()
+                    .qq(pluginParam.getFrom())
+                    .groupId(pluginParam.getTo())
+                    .isContinuity(false)
+                    .num(1)
+                    .updateTime(DateUtil.nowFormatLocalDate()).build();
+            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild, hitokoto);
             mapper.insert(signInLog);
             pluginResult.setMessage(resultBuild);
             return pluginResult;
         }
         //有判断是不是今天签到
-        LocalDate localDate = signInRecord.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();;
+        LocalDate localDate = DateUtil.parseLocalDate(signInRecord.getUpdateTime());
         LocalDate now = LocalDate.now();
 
         if (now.equals(localDate)) {
             ats.setContent("你今天已经签到过啦，明天再来吧～");
             pluginResult.setMessage(messageBuild);
-        }else{
+        } else {
             String hitokoto = hitokoto();
             boolean continuousSign = now.minusDays(1).equals(localDate);
             signInRecord = RobotPluginSignIn.builder()
                     .id(signInRecord.getId())
                     .num(continuousSign ? signInRecord.getNum() + 1 : 1)
                     .isContinuity(continuousSign).build();
-            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild,hitokoto);
+            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild, hitokoto);
             pluginResult.setMessage(resultBuild);
-            signInRecord.setUpdateTime(new Date());
+            signInRecord.setUpdateTime(DateUtil.nowFormatLocalDate());
             mapper.updateById(signInRecord);
         }
         return pluginResult;
@@ -118,7 +111,7 @@ public class SignInTest {
             content = "晚上好，早点休息鸭～\r\n签到成功～，今天你是第 %d 个签到的哟～)\n";
         }
         Integer todaySignInCnt = getTodaySignInCnt(pluginParam.getTo());
-        String signStr = String.format(content, todaySignInCnt+1);
+        String signStr = String.format(content, todaySignInCnt + 1);
         messageBuild.append(new Text(signStr));
         messageBuild.append(new Expression(FaceDef.meigui));
         if (signIn.getIsContinuity()) {
@@ -133,8 +126,9 @@ public class SignInTest {
 
     /**
      * 获取发送者最新的打卡记录
+     *
      * @param groupId qq群
-     * @param qq 发送者
+     * @param qq      发送者
      * @return 记录
      */
     private RobotPluginSignIn getNewSignInRecord(String groupId, String qq) {
@@ -144,8 +138,10 @@ public class SignInTest {
                 .orderByDesc(RobotPluginSignIn::getUpdateTime));
 
     }
+
     /**
      * 获取发送者最新的打卡记录
+     *
      * @param groupId qq群
      * @return 记录
      */
@@ -154,6 +150,7 @@ public class SignInTest {
                 .eq(RobotPluginSignIn::getGroupId, groupId)
                 .ge(RobotPluginSignIn::getUpdateTime, LocalDate.now()));
     }
+
     /**
      * 一言
      *
