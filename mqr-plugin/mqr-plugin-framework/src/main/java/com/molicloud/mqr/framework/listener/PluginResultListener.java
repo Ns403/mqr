@@ -9,19 +9,21 @@ import com.molicloud.mqr.plugin.core.RobotContextHolder;
 import com.molicloud.mqr.framework.util.ActionUtil;
 import com.molicloud.mqr.framework.util.MessageUtil;
 import com.molicloud.mqr.framework.util.PluginHookUtil;
+import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.service.RobotFriendService;
 import com.molicloud.mqr.service.RobotGroupMemberService;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.Friend;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.data.*;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
@@ -60,22 +62,6 @@ public class PluginResultListener {
         RobotEventEnum robotEventEnum = pluginParam.getRobotEventEnum();
         // 插件返回的结果
         PluginResult pluginResult = pluginResultEvent.getPluginResult();
-        //机器人0点到七点自动撤回所有消息
-        LocalTime now = LocalTime.now();
-        LocalTime max = LocalTime.of(7,0);
-        LocalTime min = LocalTime.of(0,0);
-        if (max.isAfter(now) && min.isBefore(now) && Objects.isNull(pluginResult.getAction())) {
-            if ("1083438858".equals(pluginParam.getTo())) {
-                return;
-            }
-            try {
-                MessageChain message = (MessageChain) pluginParam.getMessage();
-                MessageSource.recall(message);
-            } catch (Exception e) {
-                log.error("可能是管理员发言无权限执行", e);
-            }
-            return;
-        }
         // 判断是否为消息类型的事件
         if (robotEventEnum.isMessageEvent()) {
             switch (robotEventEnum) {
@@ -104,6 +90,18 @@ public class PluginResultListener {
      */
     private void handlerGroupMessage(Bot bot, PluginParam pluginParam, PluginResult pluginResult, String hookName) {
         Group group = bot.getGroup(Long.parseLong(pluginParam.getTo()));
+        if (Objects.isNull(group)){
+            log.info("组信息为空");
+            return;
+        }
+        //机器人0点到七点自动撤回所有消息
+        LocalTime now = LocalTime.now();
+        LocalTime max = LocalTime.of(7,0);
+        LocalTime min = LocalTime.of(0,0);
+        if (max.isAfter(now) && min.isBefore(now) && Objects.isNull(pluginResult.getAction())) {
+            curfew(pluginParam, group, now, max);
+            return;
+        }
         if (pluginResult.getMessage() != null) {
             Message groupMessage = MessageUtil.convertGroupMessage(pluginResult.getMessage(), group);
             if (groupMessage != null) {
@@ -116,6 +114,38 @@ public class PluginResultListener {
         // 持有/释放插件钩子
         if (PluginHookUtil.actionGroupMemberPluginHook(pluginParam.getTo(), pluginParam.getFrom(), hookName, pluginParam.getData().toString(), pluginResult.getHold())) {
             robotGroupMemberService.handlerHoldAction(pluginParam.getTo(), pluginParam.getFrom(), pluginResult.getHold(), hookName, pluginParam.getData().toString());
+        }
+    }
+
+    /**
+     * 处理群禁言后发消息
+     * @param pluginParam
+     * @param group
+     * @param now
+     * @param max
+     */
+    private void curfew(PluginParam pluginParam, Group group, LocalTime now, LocalTime max) {
+        if ("1083438858".equals(pluginParam.getTo())) {
+            return;
+        }
+        try {
+            ContactList<NormalMember> members = group.getMembers();
+            NormalMember normalMember = members.get(Long.parseLong(pluginParam.getFrom()));
+            Duration between = Duration.between(now, max);
+            if (Objects.nonNull(normalMember)) {
+                Ats ats = new Ats();
+                ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
+                ats.setContent("不好意思，由于现在是宵禁时间；加上赛雷Robot全体禁言有bug，不得已配置自动撤回及禁言至宵禁结束，敬请谅解！");
+                Message message = MessageUtil.convertGroupMessage(ats, group);
+                if (Objects.nonNull(message)) {
+                    group.sendMessage(message);
+                }
+                normalMember.mute((int) between.getSeconds());
+            }
+            MessageChain message = (MessageChain) pluginParam.getMessage();
+            MessageSource.recall(message);
+        } catch (Exception e) {
+            log.error("可能是管理员发言无权限执行", e);
         }
     }
 
