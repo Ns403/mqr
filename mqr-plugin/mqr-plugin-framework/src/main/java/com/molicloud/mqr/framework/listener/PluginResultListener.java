@@ -99,8 +99,10 @@ public class PluginResultListener {
         LocalTime max = LocalTime.of(7,0);
         LocalTime min = LocalTime.of(0,0);
         if (max.isAfter(now) && min.isBefore(now) && Objects.isNull(pluginResult.getAction())) {
-            curfew(pluginParam, group, now, max);
-            return;
+            if (!"1083438858".equals(pluginParam.getTo())) {
+                curfew(pluginParam, group, now, max);
+                return;
+            }
         }
         if (pluginResult.getMessage() != null) {
             Message groupMessage = MessageUtil.convertGroupMessage(pluginResult.getMessage(), group);
@@ -125,9 +127,6 @@ public class PluginResultListener {
      * @param max
      */
     private void curfew(PluginParam pluginParam, Group group, LocalTime now, LocalTime max) {
-        if ("1083438858".equals(pluginParam.getTo())) {
-            return;
-        }
         try {
             ContactList<NormalMember> members = group.getMembers();
             NormalMember normalMember = members.get(Long.parseLong(pluginParam.getFrom()));
