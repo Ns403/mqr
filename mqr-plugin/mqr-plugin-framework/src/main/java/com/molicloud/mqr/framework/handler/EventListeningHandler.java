@@ -144,6 +144,17 @@ public class EventListeningHandler extends SimpleListenerHost {
         return ListeningStatus.LISTENING;
     }
 
+    @EventHandler
+    public ListeningStatus muteAllEvent(GroupMuteAllEvent event) {
+        if (event.getNew()) {
+            //执行记录禁言群号
+        } else {
+            //执行解除禁言群号
+            // 处理消息事件
+        }
+        return ListeningStatus.LISTENING;
+    }
+
     /**
      * 监听群成员已经加群的事件
      *

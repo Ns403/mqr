@@ -5,12 +5,6 @@ web:
   #排除拦截的路由
   exclude-path-patterns: /, /admin/**, /favicon.ico, /swagger-resources/**, /swagger-ui/**, /webjars/**, /v3/**, /doc.html, /api/sys-user/login
 
-spring:
-  datasource:
-    driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:db/mqr.db?date_string_format=yyyy-MM-dd HH:mm:ss
-    username:
-    password:
 
 # 持久层配置
 mybatis-plus:
@@ -45,3 +39,6 @@ logging:
     com:
       molicloud:
         mqr: debug
+spring:
+  profiles:
+    active: local

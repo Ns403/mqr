@@ -1,7 +1,6 @@
 package com.molicloud.mqr.plugin.core;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.util.Map;
 
@@ -13,6 +12,9 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PluginInfo {
 
     /**

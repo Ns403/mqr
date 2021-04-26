@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.molicloud.mqr.plugin.mute.mappers.GroupMuteAllConfigMapper">
+  <resultMap id="baseResultMap" type="com.molicloud.mqr.plugin.mute.dao.GroupMuteAllDao">
+    <id column="id" property="id" jdbcType=""/>
+    <result column="group_id" property="groupId" jdbcType="VARCHAR"/>
+    <result column="mute_all_status" property="muteAllStatus" jdbcType="SMALLINT"/>
+    <result column="auto_mute_all_status" property="autoMuteAllStatus" jdbcType="SMALLINT"/>
+  </resultMap>
+  <insert id="insertRecord">
+    insert into group_mute_all_config
+    set group_id = #{groupId},
+        mute_all_status = #{muteAllStatus} ,
+        auto_mute_all_status = #{autoMuteAllStatus}
+  </insert>
+  <update id="updateRecord">
+    update set group_mute_all_config
+    set
+      mute_all_status = #{muteAllStatus} ,
+      auto_mute_all_status = #{autoMuteAllStatus}
+    where group_id = #{groupId}
+  </update>
+  <select id="getAll" resultType="String">
+    select 'aad'
+  </select>
+  <select id="selectByGroupId" resultMap="baseResultMap">
+    select * from group_mute_all_config where group_id = #{groupId}
+  </select>
+
+</mapper>

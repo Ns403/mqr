@@ -27,4 +27,8 @@ public enum ExecuteTriggerEnum {
      * 监听所有消息
      */
     LISTENING_ALL_MESSAGE;
+
+    public boolean check(ExecuteTriggerEnum executeTriggerEnum){
+        return this.equals(executeTriggerEnum);
+    }
 }

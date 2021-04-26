@@ -22,6 +22,7 @@
         <module>mqr-plugin-test</module>
         <module>mqr-plugin-votekick</module>
         <module>mqr-plugin-dyurl</module>
+        <module>mqr-plugin-mute-all</module>
     </modules>
 
 </project>
