@@ -1,4 +1,4 @@
-package com.molicloud.mqr.plugin.mute.dao;
+package com.molicloud.mqr.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

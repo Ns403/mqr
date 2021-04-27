@@ -1,8 +1,10 @@
-package com.molicloud.mqr.plugin.mute.mappers;
+package com.molicloud.mqr.mapper;
 
-import com.molicloud.mqr.plugin.mute.dao.GroupMuteAllDao;
+import com.molicloud.mqr.entity.GroupMuteAllDao;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @author Ns
@@ -36,4 +38,10 @@ public interface GroupMuteAllConfigMapper {
      */
     int updateRecord(GroupMuteAllDao groupMuteAllDao);
 
+
+    /**
+     * 查询出已配置宵禁的设置
+     * @return list
+     */
+    List<String> selectByAutoMuteAll();
 }

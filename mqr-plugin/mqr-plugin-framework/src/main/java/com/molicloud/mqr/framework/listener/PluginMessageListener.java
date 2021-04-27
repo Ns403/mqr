@@ -71,7 +71,7 @@ public class PluginMessageListener {
                 group.sendMessage(groupMessage);
             }
         }
-        if (action != null && !"1083438858".equals(toId)) {
+        if (action != null) {
             ActionUtil.handlerGroupAction(group, action, null);
         }
     }

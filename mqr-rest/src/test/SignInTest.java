@@ -1,5 +1,5 @@
 import com.molicloud.mqr.RobotApplication;
-import com.molicloud.mqr.plugin.mute.mappers.GroupMuteAllConfigMapper;
+import com.molicloud.mqr.mapper.GroupMuteAllConfigMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

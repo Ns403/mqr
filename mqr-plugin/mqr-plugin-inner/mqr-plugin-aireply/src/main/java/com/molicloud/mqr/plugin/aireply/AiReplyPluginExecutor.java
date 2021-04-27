@@ -160,30 +160,30 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         return restTemplate.getForObject(aiUrl, String.class);
     }
 
-    @PJob(cron = "0 0 7 * * ? ", hookName = "AiReply")
-    public void timeOffMuteAll(){
-        // 获取配置
-        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
-        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
-        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
-            Integer hour = LocalTime.now().getHour();
-            messageEvent.setAction(Action.builder().isMuteAll(false).build());
-            messageEvent.setMessage(String.format("%s宵禁结束！", hour));
-            pushMessage(messageEvent);
-        }
-    }
-    @PJob(cron = "0 0 0 * * ? ", hookName = "AiReply")
-    public void timeOnMuteAll(){
-        // 获取配置
-        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
-        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
-        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
-            Integer hour = LocalTime.now().getHour();
-            messageEvent.setAction(Action.builder().isMuteAll(true).build());
-            messageEvent.setMessage(String.format("%s点开始宵禁！", hour));
-            pushMessage(messageEvent);
-        }
-    }
+//    @PJob(cron = "0 0 7 * * ? ", hookName = "AiReply")
+//    public void timeOffMuteAll(){
+//        // 获取配置
+//        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
+//        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
+//        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+//            Integer hour = LocalTime.now().getHour();
+//            messageEvent.setAction(Action.builder().isMuteAll(false).build());
+//            messageEvent.setMessage(String.format("%s宵禁结束！", hour));
+//            pushMessage(messageEvent);
+//        }
+//    }
+//    @PJob(cron = "0 0 0 * * ? ", hookName = "AiReply")
+//    public void timeOnMuteAll(){
+//        // 获取配置
+//        AiRepltSetting aiRepltSetting = getHookSetting(AiRepltSetting.class);
+//        MessageEvent messageEvent = getMessageEvent(aiRepltSetting);
+//        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+//            Integer hour = LocalTime.now().getHour();
+//            messageEvent.setAction(Action.builder().isMuteAll(true).build());
+//            messageEvent.setMessage(String.format("%s点开始宵禁！", hour));
+//            pushMessage(messageEvent);
+//        }
+//    }
     /**
      * 根据当前小时获取提示语
      *

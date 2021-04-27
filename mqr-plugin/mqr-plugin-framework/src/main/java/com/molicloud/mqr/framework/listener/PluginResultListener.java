@@ -1,6 +1,8 @@
 package com.molicloud.mqr.framework.listener;
 
+import com.molicloud.mqr.entity.GroupMuteAllDao;
 import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
+import com.molicloud.mqr.mapper.GroupMuteAllConfigMapper;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
 import com.molicloud.mqr.plugin.core.enums.MessageTypeEnum;
@@ -43,6 +45,11 @@ public class PluginResultListener {
 
     @Autowired
     private RobotGroupMemberService robotGroupMemberService;
+    @Autowired
+    private GroupMuteAllConfigMapper groupMuteAllConfigMapper;
+
+    private static final LocalTime ZERO_LOCAL_TIME = LocalTime.of(0, 0);
+    private static final LocalTime SEVEN_LOCAL_TIME = LocalTime.of(7, 0);
 
     @Async
     @EventListener(PluginResultEvent.class)
@@ -96,13 +103,16 @@ public class PluginResultListener {
         }
         //机器人0点到七点自动撤回所有消息
         LocalTime now = LocalTime.now();
-        LocalTime max = LocalTime.of(7,0);
-        LocalTime min = LocalTime.of(0,0);
-        if (max.isAfter(now) && min.isBefore(now) && Objects.isNull(pluginResult.getAction())) {
-            if (!"1083438858".equals(pluginParam.getTo())) {
-                curfew(pluginParam, group, now, max);
-                return;
-            }
+        String to = pluginParam.getTo();
+        GroupMuteAllDao groupMuteAllDao = groupMuteAllConfigMapper.selectByGroupId(to);
+        //判断是否开启全体禁言
+        if (groupMuteAllDao.getMuteAllStatus() == 1) {
+            muteAllMsg(pluginParam, group);
+            return;
+        }
+        if (SEVEN_LOCAL_TIME.isAfter(now) && ZERO_LOCAL_TIME.isBefore(now) && groupMuteAllDao.getAutoMuteAllStatus() == 1) {
+            curfew(pluginParam, group, now);
+            return;
         }
         if (pluginResult.getMessage() != null) {
             Message groupMessage = MessageUtil.convertGroupMessage(pluginResult.getMessage(), group);
@@ -123,14 +133,37 @@ public class PluginResultListener {
      * 处理群禁言后发消息
      * @param pluginParam
      * @param group
-     * @param now
-     * @param max
      */
-    private void curfew(PluginParam pluginParam, Group group, LocalTime now, LocalTime max) {
+    private void muteAllMsg(PluginParam pluginParam, Group group) {
+        try {
+            NormalMember normalMember = group.getMembers().get(Long.parseLong(pluginParam.getFrom()));
+            if (Objects.nonNull(normalMember)) {
+                Ats ats = new Ats();
+                ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
+                ats.setContent("现在是全体禁言，您不能发言！！再次尝试将禁言一个月！！");
+                Message message = MessageUtil.convertGroupMessage(ats, group);
+                if (Objects.nonNull(message)) {
+                    group.sendMessage(message);
+                }
+            }
+            MessageChain message = (MessageChain) pluginParam.getMessage();
+            MessageSource.recall(message);
+        } catch (Exception e) {
+            log.error("可能是管理员发言无权限执行", e);
+        }
+    }
+
+    /**
+     * 处理群禁言后发消息
+     * @param pluginParam
+     * @param group
+     * @param now
+     */
+    private void curfew(PluginParam pluginParam, Group group, LocalTime now) {
         try {
             ContactList<NormalMember> members = group.getMembers();
             NormalMember normalMember = members.get(Long.parseLong(pluginParam.getFrom()));
-            Duration between = Duration.between(now, max);
+            Duration between = Duration.between(now, SEVEN_LOCAL_TIME);
             if (Objects.nonNull(normalMember)) {
                 Ats ats = new Ats();
                 ats.setMids(Lists.newArrayList(pluginParam.getFrom()));

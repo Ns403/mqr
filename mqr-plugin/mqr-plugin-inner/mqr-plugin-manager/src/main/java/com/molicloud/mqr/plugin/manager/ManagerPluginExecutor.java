@@ -46,11 +46,11 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
     /**
      * 指令列表
      */
-    private final String[] commands = {"禁言", "解禁", "踢人","全体禁言" ,"解除全体禁言"};
+    private final String[] commands = {"禁言", "解禁", "踢人"};
 
     @PHook(name = "Manager",
             listeningAllMessage = true,
-            startsKeywords = { "禁言", "解禁", "踢人","全体禁言" ,"解除全体禁言"},
+            startsKeywords = { "禁言", "解禁", "踢人"},
             equalsKeywords = { "开启自动入群", "关闭自动入群", "开启入群欢迎", "关闭入群欢迎", "设置入群欢迎语" },
             robotEvents = { RobotEventEnum.GROUP_MSG, RobotEventEnum.MEMBER_JOIN, RobotEventEnum.MEMBER_JOIN_REQUEST })
     public PluginResult messageHandler(PluginParam pluginParam) {

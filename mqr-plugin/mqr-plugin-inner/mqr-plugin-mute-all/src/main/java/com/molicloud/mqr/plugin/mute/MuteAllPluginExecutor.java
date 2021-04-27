@@ -1,28 +1,35 @@
 package com.molicloud.mqr.plugin.mute;
 
+import com.molicloud.mqr.entity.GroupMuteAllDao;
+import com.molicloud.mqr.mapper.GroupMuteAllConfigMapper;
 import com.molicloud.mqr.plugin.core.*;
 import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
+import com.molicloud.mqr.plugin.core.annotation.PJob;
+import com.molicloud.mqr.plugin.core.define.RobotDef;
 import com.molicloud.mqr.plugin.core.enums.ExecuteTriggerEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
+import com.molicloud.mqr.plugin.core.event.MessageEvent;
 import com.molicloud.mqr.plugin.core.message.MessageBuild;
 import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.plugin.mute.common.contants.MuteEnum;
-import com.molicloud.mqr.plugin.mute.dao.GroupMuteAllDao;
-import com.molicloud.mqr.plugin.mute.mappers.GroupMuteAllConfigMapper;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Ns
  */
 @Component
-public class MuteAllPluginExecutor implements PluginExecutor {
+public class MuteAllPluginExecutor extends AbstractPluginExecutor  {
     @Autowired
     private GroupMuteAllConfigMapper groupMuteAllConfigMapper;
 
@@ -109,6 +116,45 @@ public class MuteAllPluginExecutor implements PluginExecutor {
         }
         return pluginResult;
 
+    }
+
+    @PJob(cron = "0 0 7 * * ? ", hookName = "muteAllPlugin")
+    public void timeOffMuteAll(){
+        // 获取配置
+        MessageEvent messageEvent = getMessageEvent();
+        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+            Integer hour = LocalTime.now().getHour();
+            messageEvent.setAction(Action.builder().isMuteAll(false).build());
+            messageEvent.setMessage(String.format("%s宵禁结束！", hour));
+            pushMessage(messageEvent);
+        }
+    }
+    @PJob(cron = "0 0 0 * * ? ", hookName = "muteAllPlugin")
+    public void timeOnMuteAll(){
+        // 获取配置
+        MessageEvent messageEvent = getMessageEvent();
+        if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
+            Integer hour = LocalTime.now().getHour();
+            messageEvent.setAction(Action.builder().isMuteAll(true).build());
+            messageEvent.setMessage(String.format("%s点开始宵禁！", hour));
+            pushMessage(messageEvent);
+        }
+    }
+
+    /**
+     * 获取全体禁言的群号
+     * @return
+     */
+    public MessageEvent getMessageEvent() {
+        List<RobotDef.Group> getGroupList = getGroupList();
+        //获取机器人所有的群
+        List<String> robotGroupIdList = getGroupList.stream().map(RobotDef.Group::getId).collect(Collectors.toList());
+        List<String> MuteAllConfigList = groupMuteAllConfigMapper.selectByAutoMuteAll();
+        //取俩群id的配置
+        MuteAllConfigList.retainAll(robotGroupIdList);
+        MessageEvent messageEvent = new MessageEvent();
+        messageEvent.setToIds(MuteAllConfigList);
+        return messageEvent;
     }
 
     /**
