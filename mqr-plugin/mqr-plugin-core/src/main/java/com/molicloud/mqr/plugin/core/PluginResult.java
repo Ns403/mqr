@@ -38,6 +38,12 @@ public class PluginResult<T> implements Serializable {
      */
     private T message;
 
+
+    /**
+     * 是否来源是禁言插件
+     */
+    private boolean muteAllPlugin;
+
     /**
      * 处理消息并回复消息和处理动作
      *

@@ -105,14 +105,20 @@ public class PluginResultListener {
         LocalTime now = LocalTime.now();
         String to = pluginParam.getTo();
         GroupMuteAllDao groupMuteAllDao = groupMuteAllConfigMapper.selectByGroupId(to);
-        //判断是否开启全体禁言
-        if (groupMuteAllDao.getMuteAllStatus() == 1) {
-            muteAllMsg(pluginParam, group);
-            return;
+        if (Objects.isNull(groupMuteAllDao)) {
+            groupMuteAllDao = GroupMuteAllDao.builder().groupId(String.valueOf(group.getId())).muteAllStatus(0).autoMuteAllStatus(0).build();
+            groupMuteAllConfigMapper.insertRecord(groupMuteAllDao);
         }
-        if (SEVEN_LOCAL_TIME.isAfter(now) && ZERO_LOCAL_TIME.isBefore(now) && groupMuteAllDao.getAutoMuteAllStatus() == 1) {
-            curfew(pluginParam, group, now);
-            return;
+        if (!pluginResult.isMuteAllPlugin()) {
+            //判断是否开启全体禁言
+            if (groupMuteAllDao.getMuteAllStatus() == 1) {
+                muteAllMsg(pluginParam, group);
+                return;
+            }
+            if (SEVEN_LOCAL_TIME.isAfter(now) && ZERO_LOCAL_TIME.isBefore(now) && groupMuteAllDao.getAutoMuteAllStatus() == 1) {
+                curfew(pluginParam, group, now);
+                return;
+            }
         }
         if (pluginResult.getMessage() != null) {
             Message groupMessage = MessageUtil.convertGroupMessage(pluginResult.getMessage(), group);
@@ -121,7 +127,7 @@ public class PluginResultListener {
             }
         }
         if (pluginResult.getAction() != null) {
-            ActionUtil.handlerGroupAction(group, pluginResult.getAction(),pluginParam);
+            ActionUtil.handlerGroupAction(group, pluginResult.getAction(), pluginParam);
         }
         // 持有/释放插件钩子
         if (PluginHookUtil.actionGroupMemberPluginHook(pluginParam.getTo(), pluginParam.getFrom(), hookName, pluginParam.getData().toString(), pluginResult.getHold())) {

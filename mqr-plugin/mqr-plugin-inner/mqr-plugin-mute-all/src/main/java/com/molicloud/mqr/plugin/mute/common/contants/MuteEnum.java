@@ -3,6 +3,11 @@ package com.molicloud.mqr.plugin.mute.common.contants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * @author Ns
  */
@@ -20,4 +25,11 @@ public enum MuteEnum {
     UN_AUTO_MUTE_ALL("关闭宵禁"),
     ;
     private final String keyword;
+    private static final Map<String, MuteEnum> DEFAULT_MAP;
+    static {
+        DEFAULT_MAP = Stream.of(MuteEnum.values()).collect(Collectors.toMap(MuteEnum::getKeyword, Function.identity()));
+    }
+    public static MuteEnum getMuteEnum(String keyword){
+        return DEFAULT_MAP.get(keyword);
+    }
 }

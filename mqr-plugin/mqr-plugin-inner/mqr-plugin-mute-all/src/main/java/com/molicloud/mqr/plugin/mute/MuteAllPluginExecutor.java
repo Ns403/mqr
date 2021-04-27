@@ -64,8 +64,9 @@ public class MuteAllPluginExecutor extends AbstractPluginExecutor  {
         int muteAllStatus = 0;
         int autoMuteAllStatus = 0;
         String keyword = pluginParam.getKeyword();
-        MuteEnum muteEnum = MuteEnum.valueOf(keyword);
+        MuteEnum muteEnum = MuteEnum.getMuteEnum(keyword);
         pluginResult.setProcessed(true);
+        pluginResult.setMuteAllPlugin(true);
         Action action = new Action();
         switch (muteEnum) {
             case MUTE_ALL:

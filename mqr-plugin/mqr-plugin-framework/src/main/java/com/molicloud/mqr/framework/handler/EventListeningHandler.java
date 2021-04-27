@@ -150,16 +150,17 @@ public class EventListeningHandler extends SimpleListenerHost {
     public ListeningStatus muteAllEvent(GroupMuteAllEvent event) {
         PluginParam pluginParam = new PluginParam();
         NormalMember operator = event.getOperator();
-        long id = Objects.isNull(operator) ? 1047967799L : operator.getId();
-        pluginParam.setFrom(String.valueOf(id));
-        pluginParam.setTo(String.valueOf(event.getGroup().getId()));
-        pluginParam.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
-        if (event.getNew()) {
-            pluginParam.setData("管理员已开启全体禁言");
-        } else {
-            pluginParam.setData("管理员已关闭全体禁言");
+        if (Objects.nonNull(operator)) {
+            pluginParam.setFrom(String.valueOf(operator.getId()));
+            pluginParam.setTo(String.valueOf(event.getGroup().getId()));
+            pluginParam.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
+            if (event.getNew()) {
+                pluginParam.setData("管理员已开启全体禁言");
+            } else {
+                pluginParam.setData("管理员已关闭全体禁言");
+            }
+            handlerMessageEvent(pluginParam);
         }
-        handlerMessageEvent(pluginParam);
         return ListeningStatus.LISTENING;
     }
 
