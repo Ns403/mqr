@@ -13,7 +13,9 @@ public enum MuteEnum {
      * 关键字枚举
      */
     MUTE_ALL("全体禁言"),
+    MUTE_ALL_ED("管理员已开启全体禁言"),
     UN_MUTE_ALL("解除全体禁言"),
+    UN_MUTE_ALL_ED("管理员已关闭全体禁言"),
     AUTO_MUTE_ALL("开启宵禁"),
     UN_AUTO_MUTE_ALL("关闭宵禁"),
     ;

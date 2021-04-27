@@ -15,6 +15,7 @@ import kotlin.coroutines.CoroutineContext;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.SimpleListenerHost;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -146,12 +148,18 @@ public class EventListeningHandler extends SimpleListenerHost {
 
     @EventHandler
     public ListeningStatus muteAllEvent(GroupMuteAllEvent event) {
+        PluginParam pluginParam = new PluginParam();
+        NormalMember operator = event.getOperator();
+        long id = Objects.isNull(operator) ? 1047967799L : operator.getId();
+        pluginParam.setFrom(String.valueOf(id));
+        pluginParam.setTo(String.valueOf(event.getGroup().getId()));
+        pluginParam.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
         if (event.getNew()) {
-            //执行记录禁言群号
+            pluginParam.setData("管理员已开启全体禁言");
         } else {
-            //执行解除禁言群号
-            // 处理消息事件
+            pluginParam.setData("管理员已关闭全体禁言");
         }
+        handlerMessageEvent(pluginParam);
         return ListeningStatus.LISTENING;
     }
 
