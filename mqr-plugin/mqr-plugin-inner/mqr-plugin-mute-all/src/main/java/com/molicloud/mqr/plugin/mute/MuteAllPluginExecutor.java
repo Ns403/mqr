@@ -154,6 +154,7 @@ public class MuteAllPluginExecutor extends AbstractPluginExecutor  {
         //取俩群id的配置
         MuteAllConfigList.retainAll(robotGroupIdList);
         MessageEvent messageEvent = new MessageEvent();
+        messageEvent.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
         messageEvent.setToIds(MuteAllConfigList);
         return messageEvent;
     }
@@ -175,7 +176,7 @@ public class MuteAllPluginExecutor extends AbstractPluginExecutor  {
                 .name("全体禁言插件")
                 .author("Ns")
                 .explain("处理全体禁言后相关，及全体禁言失效处理")
-                .version(100000)
+                .version(100002)
                 .initScript("create table group_mute_all_config (" +
                         " id        INTEGER not null primary key autoincrement," +
                         " group_id  VARCHAR(50) not null," +
