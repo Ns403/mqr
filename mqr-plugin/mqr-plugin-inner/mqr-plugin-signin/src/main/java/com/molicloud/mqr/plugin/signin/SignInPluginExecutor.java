@@ -59,14 +59,13 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         messageBuild.append(ats);
         //没有为首次签到
         if (Objects.isNull(signInRecord)) {
-            String hitokoto = hitokoto();
             RobotPluginSignIn signInLog = RobotPluginSignIn.builder()
                     .qq(pluginParam.getFrom())
                     .groupId(pluginParam.getTo())
                     .isContinuity(false)
                     .num(1)
                     .updateTime(DateUtil.nowFormatLocalDate()).build();
-            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild, hitokoto);
+            MessageBuild resultBuild = getResultBuild(signInLog, pluginParam, messageBuild);
             mapper.insert(signInLog);
             pluginResult.setMessage(resultBuild);
             return pluginResult;
@@ -79,13 +78,12 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
             ats.setContent("你今天已经签到过啦，明儿再来吧～");
             pluginResult.setMessage(messageBuild);
         } else {
-            String hitokoto = hitokoto();
             boolean continuousSign = now.minusDays(1).equals(localDate);
             signInRecord = RobotPluginSignIn.builder()
                     .id(signInRecord.getId())
                     .num(signInRecord.getNum() + 1)
                     .isContinuity(continuousSign).build();
-            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild, hitokoto);
+            MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild);
             pluginResult.setMessage(resultBuild);
             signInRecord.setUpdateTime(DateUtil.nowFormatLocalDate());
             mapper.updateById(signInRecord);
@@ -101,7 +99,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
      * @param messageBuild 构建返回消息
      * @return 构建饭回
      */
-    private MessageBuild getResultBuild(RobotPluginSignIn signIn, PluginParam pluginParam, MessageBuild messageBuild, String hitokoto) {
+    private MessageBuild getResultBuild(RobotPluginSignIn signIn, PluginParam pluginParam, MessageBuild messageBuild) {
         String content = "";
         int hour = LocalDateTime.now().getHour();
         if (hour <= 6) {
@@ -128,8 +126,6 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
             String signCntStr = String.format("\r\n截止今日，你已经累计签到 %d 天啦！明天还要继续加油鸭～", signIn.getNum());
             messageBuild.append(new Text(signCntStr));
         }
-        // 一言
-        messageBuild.append(new Text(String.format("\r\n今日份鸡汤「%s」", hitokoto)));
         return messageBuild;
     }
 

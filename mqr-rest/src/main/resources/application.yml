@@ -33,12 +33,6 @@ mybatis-plus:
 
 mqr:
   deviceInfo: /device
-# 日志级别
-logging:
-  level:
-    com:
-      molicloud:
-        mqr: debug
 spring:
   profiles:
     active: stg

@@ -58,8 +58,6 @@ public class PluginResultListener {
         Bot bot = Bot.getInstance(Long.parseLong(RobotContextHolder.getRobot().getQq()));
         // 插件入参
         PluginParam pluginParam = pluginResultEvent.getPluginParam();
-        //处理
-        log.info("sendMsg:{}",pluginParam.getData());
         if (MessageTypeEnum.checkMsgType(String.valueOf(pluginParam.getData()))) {
             MessageChain message = (MessageChain) pluginParam.getMessage();
             MessageSource.recall(message);

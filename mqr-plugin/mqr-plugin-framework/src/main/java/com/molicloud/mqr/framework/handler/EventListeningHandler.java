@@ -58,10 +58,23 @@ public class EventListeningHandler extends SimpleListenerHost {
         if (groupAllowListFilter(String.valueOf(event.getGroup().getId()))) {
             // 实例化插件入参对象
             PluginParam pluginParam = new PluginParam();
-            pluginParam.setFrom(String.valueOf(event.getSender().getId()));
-            pluginParam.setTo(String.valueOf(event.getGroup().getId()));
+            Group group = event.getGroup();
+            Member sender = event.getSender();
+            pluginParam.setFrom(String.valueOf(sender.getId()));
+            pluginParam.setTo(String.valueOf(group.getId()));
             pluginParam.setData(event.getMessage().contentToString());
             pluginParam.setMessage(event.getMessage());
+            log.info("[{}({})],{}({})->[{}]", group.getName().substring(group.getName().length() - 2), group.getId(), sender.getNick(), sender.getId(), pluginParam.getData());
+            MessageSource messageSource = event.getMessage().get(MessageSource.Key);
+
+//            log.info("sendMsg:{}", messageSource);
+//            log.info("sendMsg:getFromId:{}", messageSource.getFromId());
+//            log.info("sendMsg:getIds:{}", messageSource.getIds());
+//            log.info("sendMsg:getInternalIds:{}", messageSource.getInternalIds());
+//            log.info("sendMsg:getTargetId:{}", messageSource.getTargetId());
+//            log.info("sendMsg:getTime:{}", messageSource.getTime());
+//            OfflineMessageSource build = new MessageSourceBuilder().time(messageSource.getTime()).metadata(messageSource).build(messageSource.getBotId(), MessageSourceKind.GROUP);
+//            MessageSource.recall(build);
             pluginParam.setRobotEventEnum(RobotEventEnum.GROUP_MSG);
             // 获取消息中的At信息
             List<AtDef> atDefs = new LinkedList<>();

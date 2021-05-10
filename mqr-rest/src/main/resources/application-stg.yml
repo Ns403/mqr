@@ -4,3 +4,13 @@ spring:
     url: jdbc:sqlite:db/mqr.db?date_string_format=yyyy-MM-dd HH:mm:ss
     username:
     password:
+# 日志级别
+logging:
+  level:
+    com:
+      molicloud:
+        mqr: info
+  file:
+    path: /logs/
+    name: /logs/mqr.log
+    max-history: 60
