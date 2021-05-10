@@ -83,7 +83,7 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
             boolean continuousSign = now.minusDays(1).equals(localDate);
             signInRecord = RobotPluginSignIn.builder()
                     .id(signInRecord.getId())
-                    .num(continuousSign ? signInRecord.getNum() + 1 : 1)
+                    .num(signInRecord.getNum() + 1)
                     .isContinuity(continuousSign).build();
             MessageBuild resultBuild = getResultBuild(signInRecord, pluginParam, messageBuild, hitokoto);
             pluginResult.setMessage(resultBuild);
@@ -123,9 +123,9 @@ public class SignInPluginExecutor extends AbstractPluginExecutor {
         String signStr = String.format(content, todaySignInCnt + 1);
         messageBuild.append(new Text(signStr));
         messageBuild.append(new Expression(FaceDef.meigui));
-        if (signIn.getIsContinuity()) {
-            //如果超出昨天算没有签
-            String signCntStr = String.format("\r\n截止今日，你已经连续签到 %d 天啦！明天还要继续加油鸭～", signIn.getNum());
+        //如果超出昨天算没有签
+        if (signIn.getNum() >= 1) {
+            String signCntStr = String.format("\r\n截止今日，你已经累计签到 %d 天啦！明天还要继续加油鸭～", signIn.getNum());
             messageBuild.append(new Text(signCntStr));
         }
         // 一言

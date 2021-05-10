@@ -119,6 +119,10 @@ public class AiReplyPluginExecutor extends AbstractPluginExecutor {
         } else {
             String reply = "这是啥？";
             if (!StringUtils.isEmpty(message)) {
+                if (message.contains("笑话")) {
+                    pluginResult.setProcessed(false);
+                    return pluginResult;
+                }
                 String regEx = "[a-z0-9A-Z\\u4e00-\\u9fa5]";
                 Pattern p = Pattern.compile(regEx);
                 Matcher m = p.matcher(message);
