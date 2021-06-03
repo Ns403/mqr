@@ -5,7 +5,7 @@ import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginInfo;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
-import com.molicloud.mqr.plugin.core.action.KickAction;
+import com.molicloud.mqr.plugin.core.action.impl.KickAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.define.AtDef;
 import com.molicloud.mqr.plugin.core.define.FaceDef;

@@ -1,16 +1,20 @@
 package com.molicloud.mqr.plugin.manager;
 
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
+import com.molicloud.mqr.plugin.core.PluginInfo;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
 import com.molicloud.mqr.plugin.core.action.Action;
-import com.molicloud.mqr.plugin.core.action.KickAction;
-import com.molicloud.mqr.plugin.core.action.MuteAction;
-import com.molicloud.mqr.plugin.core.action.UnmuteAction;
+import com.molicloud.mqr.plugin.core.action.impl.BlackKickAction;
+import com.molicloud.mqr.plugin.core.action.impl.KickAction;
+import com.molicloud.mqr.plugin.core.action.impl.MuteAction;
+import com.molicloud.mqr.plugin.core.action.impl.UnmuteAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.define.AtDef;
 import com.molicloud.mqr.plugin.core.define.FaceDef;
+import com.molicloud.mqr.plugin.core.define.RobotDef;
 import com.molicloud.mqr.plugin.core.enums.ChoiceEnum;
 import com.molicloud.mqr.plugin.core.enums.ExecuteTriggerEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
@@ -18,12 +22,15 @@ import com.molicloud.mqr.plugin.core.event.MessageEvent;
 import com.molicloud.mqr.plugin.core.message.MessageBuild;
 import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.plugin.core.message.make.Expression;
+import com.molicloud.mqr.service.BlackUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -42,17 +49,19 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
      * 被操作对象QQ列表
      */
     private List<String> ids = new LinkedList<>();
+    @Autowired
+    private BlackUserService blackUserService;
 
     /**
      * 指令列表
      */
-    private final String[] commands = {"禁言", "解禁", "踢人"};
+    private final String[] commands = {"禁言", "解禁", "踢人", "拉黑"};
 
     @PHook(name = "Manager",
             listeningAllMessage = true,
-            startsKeywords = { "禁言", "解禁", "踢人"},
-            equalsKeywords = { "开启自动入群", "关闭自动入群", "开启入群欢迎", "关闭入群欢迎", "设置入群欢迎语" },
-            robotEvents = { RobotEventEnum.GROUP_MSG, RobotEventEnum.MEMBER_JOIN, RobotEventEnum.MEMBER_JOIN_REQUEST })
+            startsKeywords = {"禁言", "解禁", "踢人", "拉黑"},
+            equalsKeywords = {"开启自动入群", "关闭自动入群", "开启入群欢迎", "关闭入群欢迎", "设置入群欢迎语"},
+            robotEvents = {RobotEventEnum.GROUP_MSG, RobotEventEnum.MEMBER_JOIN, RobotEventEnum.MEMBER_JOIN_REQUEST})
     public PluginResult messageHandler(PluginParam pluginParam) {
         if (RobotEventEnum.GROUP_MSG.equals(pluginParam.getRobotEventEnum())) {
             return handlerYihao(pluginParam);
@@ -157,6 +166,13 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
             case "解除全体禁言":
                 pluginResult.setAction(Action.builder().isMuteAll(false).build());
                 break;
+            case "拉黑":
+                //保存拉黑记录
+                blackUserService.addBlackUserList(ids);
+                BlackKickAction blackKickAction = new BlackKickAction();
+                blackKickAction.setIds(ids);
+                pluginResult.setAction(blackKickAction);
+                break;
             case "踢人":
                 pluginResult.setAction(new KickAction(ids));
                 break;
@@ -173,6 +189,10 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
      * @return
      */
     private PluginResult handlerMemberJoinRequestEvent(PluginParam pluginParam) {
+        Boolean isBlack = blackUserService.checkUserInBlack(pluginParam.getFrom());
+        if (isBlack) {
+            return PluginResult.reply(ChoiceEnum.REJECT_IN_BLACK);
+        }
         // 获取管理配置
         ManagerSetting managerSetting = getHookSetting(ManagerSetting.class);
         // 如果配置不为空，且没有开启自动加群，则忽略此申请
@@ -313,9 +333,30 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
     }
 
     private static String getArgNum(String str) {
-        String regEx="[^0-9]";
+        String regEx = "[^0-9]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
         return m.replaceAll("").trim();
+    }
+
+    @Override
+    public PluginInfo getPluginInfo() {
+        PluginInfo pluginInfo = new PluginInfo();
+        Map<Integer, String> build = MapUtil.builder(10001, "create unique index u_idx_black_user_qq on robot_plugin_black_user (qq);").build();
+        pluginInfo.setAuthor("NS");
+        pluginInfo.setName("Manager");
+        pluginInfo.setVersion(10001);
+        pluginInfo.setInitScript("create table robot_plugin_black_user\n" +
+                "(\n" +
+                "    id INTEGER not null\n" +
+                "        constraint robot_plugin_black_user_pk\n" +
+                "            primary key autoincrement,\n" +
+                "    qq varchar(32) not null,\n" +
+                "    status tinyint default 1 not null,\n" +
+                "    create_time timestamp default current_timestamp not null,\n" +
+                "    update_time timestamp\n" +
+                ");");
+        pluginInfo.setUpdateScriptList(build);
+        return pluginInfo;
     }
 }

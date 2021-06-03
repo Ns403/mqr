@@ -5,6 +5,8 @@ import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
 import com.molicloud.mqr.mapper.GroupMuteAllConfigMapper;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.action.Action;
+import com.molicloud.mqr.plugin.core.action.impl.BlackKickAction;
 import com.molicloud.mqr.plugin.core.enums.MessageTypeEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
 import com.molicloud.mqr.plugin.core.RobotContextHolder;
@@ -94,8 +96,9 @@ public class PluginResultListener {
      * @param hookName
      */
     private void handlerGroupMessage(Bot bot, PluginParam pluginParam, PluginResult pluginResult, String hookName) {
+        ContactList<Group> groups = bot.getGroups();
         Group group = bot.getGroup(Long.parseLong(pluginParam.getTo()));
-        if (Objects.isNull(group)){
+        if (Objects.isNull(group)) {
             log.info("组信息为空");
             return;
         }
@@ -124,8 +127,13 @@ public class PluginResultListener {
                 group.sendMessage(groupMessage);
             }
         }
-        if (pluginResult.getAction() != null) {
-            ActionUtil.handlerGroupAction(group, pluginResult.getAction(), pluginParam);
+        Action action = pluginResult.getAction();
+        if (Objects.nonNull(action)) {
+            if (action instanceof BlackKickAction) {
+                ActionUtil.blackAndKick(groups, (BlackKickAction) action, pluginParam);
+            } else {
+                ActionUtil.handlerGroupAction(group, action, pluginParam);
+            }
         }
         // 持有/释放插件钩子
         if (PluginHookUtil.actionGroupMemberPluginHook(pluginParam.getTo(), pluginParam.getFrom(), hookName, pluginParam.getData().toString(), pluginResult.getHold())) {

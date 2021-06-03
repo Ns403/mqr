@@ -250,6 +250,8 @@ public class EventListeningHandler extends SimpleListenerHost {
                     memberJoinRequestEvent.accept();
                 } else if (choice.equals(ChoiceEnum.REJECT)) {
                     memberJoinRequestEvent.reject(ChoiceEnum.REJECT.getBlacklist(), ChoiceEnum.REJECT.getMessage());
+                } else if (choice.equals(ChoiceEnum.REJECT_IN_BLACK)) {
+                    memberJoinRequestEvent.reject(ChoiceEnum.REJECT_IN_BLACK.getBlacklist(), ChoiceEnum.REJECT_IN_BLACK.getMessage());
                 } else if (choice.equals(ChoiceEnum.IGNORE)) {
                     memberJoinRequestEvent.ignore(ChoiceEnum.IGNORE.getBlacklist());
                 }

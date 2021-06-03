@@ -1,8 +1,10 @@
 package com.molicloud.mqr.framework.util;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import com.molicloud.mqr.plugin.core.PluginParam;
-import com.molicloud.mqr.plugin.core.action.*;
+import com.molicloud.mqr.plugin.core.action.Action;
+import com.molicloud.mqr.plugin.core.action.impl.*;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.contact.*;
@@ -11,6 +13,7 @@ import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageSource;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -23,8 +26,39 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class ActionUtil {
 
+
+    /**
+     * 处理拉黑鱼
+     *
+     * @param groups
+     * @param action
+     * @param pluginParam
+     */
+    public static void blackAndKick(ContactList<Group> groups, BlackKickAction action, PluginParam pluginParam) {
+        //踢人逻辑处理
+        if (Objects.nonNull(pluginParam) && pluginParam.getMessage() instanceof Message) {
+            MessageChain message = (MessageChain) pluginParam.getMessage();
+            MessageSource.recall(message);
+        }
+        groups.forEach(group -> {
+            MemberPermission botPermission = group.getBotPermission();
+            List<String> ids = action.getIds();
+            if (MemberPermission.ADMINISTRATOR.compareTo(botPermission) != 0 || CollectionUtil.isEmpty(ids)) {
+                return;
+            }
+            ContactList<NormalMember> members = group.getMembers();
+            ids.forEach(id -> {
+                NormalMember member = members.get(Long.parseLong(id));
+                if (Objects.nonNull(member)) {
+                    member.kick("您已被所有雷雷群拉黑！");
+                }
+            });
+        });
+    }
+
     /**
      * 处理群动作
+     *
      * @param group
      * @param action
      * @param pluginParam

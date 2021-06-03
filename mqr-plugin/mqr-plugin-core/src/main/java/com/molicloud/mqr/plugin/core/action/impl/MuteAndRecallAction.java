@@ -1,7 +1,7 @@
-package com.molicloud.mqr.plugin.core.action;
+package com.molicloud.mqr.plugin.core.action.impl;
 
 import com.beust.jcommander.internal.Lists;
-import lombok.Data;
+import com.molicloud.mqr.plugin.core.action.Action;
 import lombok.EqualsAndHashCode;
 
 /**

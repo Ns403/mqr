@@ -18,6 +18,8 @@ public enum ChoiceEnum {
      */
     REJECT("", false),
 
+    REJECT_IN_BLACK("您已被拉黑，不能加群", true),
+
     /**
      * 忽略
      */

@@ -5,9 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
-import com.molicloud.mqr.plugin.core.RobotContextHolder;
-import com.molicloud.mqr.plugin.core.action.Action;
-import com.molicloud.mqr.plugin.core.action.MuteAndRecallAction;
+import com.molicloud.mqr.plugin.core.action.impl.MuteAndRecallAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.annotation.PJob;
 import com.molicloud.mqr.plugin.core.define.RobotDef;
@@ -17,7 +15,6 @@ import com.molicloud.mqr.plugin.core.event.MessageEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
