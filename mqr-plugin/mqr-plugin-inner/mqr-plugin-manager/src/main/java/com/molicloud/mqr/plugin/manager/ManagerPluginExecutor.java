@@ -1,7 +1,6 @@
 package com.molicloud.mqr.plugin.manager;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
@@ -9,7 +8,6 @@ import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginInfo;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
-import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.action.impl.BlackKickAction;
 import com.molicloud.mqr.plugin.core.action.impl.KickAction;
 import com.molicloud.mqr.plugin.core.action.impl.MuteAction;
@@ -17,7 +15,6 @@ import com.molicloud.mqr.plugin.core.action.impl.UnmuteAction;
 import com.molicloud.mqr.plugin.core.annotation.PHook;
 import com.molicloud.mqr.plugin.core.define.AtDef;
 import com.molicloud.mqr.plugin.core.define.FaceDef;
-import com.molicloud.mqr.plugin.core.define.RobotDef;
 import com.molicloud.mqr.plugin.core.enums.ChoiceEnum;
 import com.molicloud.mqr.plugin.core.enums.ExecuteTriggerEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
