@@ -345,7 +345,7 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
         Map<Integer, String> build = MapUtil.builder(10001, "create unique index u_idx_black_user_qq on robot_plugin_black_user (qq);").build();
         pluginInfo.setAuthor("NS");
         pluginInfo.setName("Manager");
-        pluginInfo.setVersion(10001);
+        pluginInfo.setVersion(10002);
         pluginInfo.setInitScript("create table robot_plugin_black_user\n" +
                 "(\n" +
                 "    id INTEGER not null\n" +
