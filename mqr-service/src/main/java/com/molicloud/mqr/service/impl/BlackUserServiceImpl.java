@@ -1,7 +1,6 @@
 package com.molicloud.mqr.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.molicloud.mqr.entity.BlackUserDto;
 import com.molicloud.mqr.mapper.BlackUserMapper;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Ns
