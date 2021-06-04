@@ -37,7 +37,7 @@ public class BlackUserServiceImpl implements BlackUserService {
 
     @Override
     public Boolean checkUserInBlack(String fromQq) {
-        BlackUserDto blackUserDto = blackUserMapper.selectOne(Wrappers.<BlackUserDto>lambdaQuery().eq(BlackUserDto::getQq, fromQq));
+        BlackUserDto blackUserDto = blackUserMapper.selectOne(Wrappers.<BlackUserDto>lambdaQuery().eq(BlackUserDto::getQq, fromQq).eq(BlackUserDto::getStatus, 1));
         return Objects.nonNull(blackUserDto);
     }
 
