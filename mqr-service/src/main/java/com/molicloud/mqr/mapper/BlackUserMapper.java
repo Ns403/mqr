@@ -14,4 +14,6 @@ import java.util.List;
 public interface BlackUserMapper extends BaseMapper<BlackUserDto> {
 
     int addBlackRecord(@Param("qqList") List<String> qqList);
+
+    int updateBlackRecord(@Param("list") List<BlackUserDto> list);
 }

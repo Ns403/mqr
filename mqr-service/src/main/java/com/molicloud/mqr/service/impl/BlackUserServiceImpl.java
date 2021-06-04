@@ -1,5 +1,7 @@
 package com.molicloud.mqr.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.molicloud.mqr.entity.BlackUserDto;
 import com.molicloud.mqr.mapper.BlackUserMapper;
@@ -9,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Ns
@@ -20,7 +25,16 @@ public class BlackUserServiceImpl implements BlackUserService {
 
     @Override
     public int addBlackUserList(List<String> ids) {
-        return blackUserMapper.addBlackRecord(ids);
+        List<BlackUserDto> list = blackUserMapper.selectList(Wrappers.<BlackUserDto>lambdaQuery().in(BlackUserDto::getQq, ids));
+        if (CollectionUtil.isNotEmpty(list)) {
+            blackUserMapper.updateBlackRecord(list);
+            Set<String> existQq = list.stream().map(BlackUserDto::getQq).collect(Collectors.toSet());
+            ids.removeAll(existQq);
+        }
+        if (CollectionUtil.isNotEmpty(ids)) {
+            return blackUserMapper.addBlackRecord(ids);
+        }
+        return 0;
     }
 
     @Override

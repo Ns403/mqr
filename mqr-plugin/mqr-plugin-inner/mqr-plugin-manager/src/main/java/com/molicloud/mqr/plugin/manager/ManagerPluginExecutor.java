@@ -1,6 +1,9 @@
 package com.molicloud.mqr.plugin.manager;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.molicloud.mqr.plugin.core.AbstractPluginExecutor;
 import com.molicloud.mqr.plugin.core.PluginInfo;
@@ -148,8 +151,11 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
         String command = getCommand(message);
         List<AtDef> atDefs = pluginParam.getAts();
         ids = atDefs.stream().map(AtDef::getId).distinct().collect(Collectors.toList());
-        boolean muteAll = !("全体禁言".equals(command) || "解除全体禁言".equals(command));
-        if (ids.isEmpty()&&muteAll ) {
+        if (CollectionUtil.isEmpty(ids)) {
+            String qqStr = StrUtil.removeAll(message, "拉黑");
+            ids = Arrays.stream(StrUtil.split(qqStr, ",")).filter(NumberUtil::isNumber).collect(Collectors.toList());
+        }
+        if (CollectionUtil.isEmpty(ids)) {
             pluginResult.setMessage("未选择操作对象");
             return pluginResult;
         }
@@ -160,13 +166,8 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
             case "解禁":
                 pluginResult.setAction(new UnmuteAction(ids));
                 break;
-            case "全体禁言":
-                pluginResult.setAction(Action.builder().isMuteAll(true).build());
-                break;
-            case "解除全体禁言":
-                pluginResult.setAction(Action.builder().isMuteAll(false).build());
-                break;
             case "拉黑":
+
                 //保存拉黑记录
                 blackUserService.addBlackUserList(ids);
                 BlackKickAction blackKickAction = new BlackKickAction();
@@ -308,7 +309,9 @@ public class ManagerPluginExecutor extends AbstractPluginExecutor {
      */
     private String getArgsContent(List<AtDef> atDefs, String message) {
         String content = message.replace(getCommand(message), "").trim(); // 指令后面的内容
-        for (AtDef atDef : atDefs) content = content.replaceAll(atDef.getNick(), "");
+        for (AtDef atDef : atDefs) {
+            content = content.replaceAll(atDef.getNick(), "");
+        }
         return content.trim();
     }
 

@@ -5,8 +5,16 @@
 
     <insert id="addBlackRecord">
         insert into robot_plugin_black_user (qq) values
-        <foreach collection="qqList" item="qq" close="(" open="(" separator=",">
+        <foreach collection="qqList" item="qq" close=")" open="(" separator=",">
             #{qq}
         </foreach>
     </insert>
+
+    <update id="updateBlackRecord">
+        update robot_plugin_black_user set status = '1',update_time = current_timestamp where
+        qq IN
+        <foreach collection="list" item="dto" close=")" open="(" separator=",">
+            #{dto.qq}
+        </foreach>
+    </update>
 </mapper>

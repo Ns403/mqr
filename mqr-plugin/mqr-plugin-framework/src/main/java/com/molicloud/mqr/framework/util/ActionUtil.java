@@ -36,9 +36,13 @@ public class ActionUtil {
      */
     public static void blackAndKick(ContactList<Group> groups, BlackKickAction action, PluginParam pluginParam) {
         //踢人逻辑处理
-        if (Objects.nonNull(pluginParam) && pluginParam.getMessage() instanceof Message) {
-            MessageChain message = (MessageChain) pluginParam.getMessage();
-            MessageSource.recall(message);
+        try {
+            if (Objects.nonNull(pluginParam) && pluginParam.getMessage() instanceof Message) {
+                MessageChain message = (MessageChain) pluginParam.getMessage();
+                MessageSource.recall(message);
+            }
+        } catch (Exception e) {
+            log.error("可能没有权限");
         }
         groups.forEach(group -> {
             MemberPermission botPermission = group.getBotPermission();
