@@ -2,33 +2,33 @@ package com.molicloud.mqr.framework.listener;
 
 import com.molicloud.mqr.entity.GroupMuteAllDao;
 import com.molicloud.mqr.framework.listener.event.PluginResultEvent;
+import com.molicloud.mqr.framework.util.ActionUtil;
+import com.molicloud.mqr.framework.util.MessageUtil;
+import com.molicloud.mqr.framework.util.PluginHookUtil;
 import com.molicloud.mqr.mapper.GroupMuteAllConfigMapper;
 import com.molicloud.mqr.plugin.core.PluginParam;
 import com.molicloud.mqr.plugin.core.PluginResult;
+import com.molicloud.mqr.plugin.core.RobotContextHolder;
 import com.molicloud.mqr.plugin.core.action.Action;
 import com.molicloud.mqr.plugin.core.action.impl.BlackKickAction;
 import com.molicloud.mqr.plugin.core.enums.MessageTypeEnum;
 import com.molicloud.mqr.plugin.core.enums.RobotEventEnum;
-import com.molicloud.mqr.plugin.core.RobotContextHolder;
-import com.molicloud.mqr.framework.util.ActionUtil;
-import com.molicloud.mqr.framework.util.MessageUtil;
-import com.molicloud.mqr.framework.util.PluginHookUtil;
 import com.molicloud.mqr.plugin.core.message.make.Ats;
 import com.molicloud.mqr.service.RobotFriendService;
 import com.molicloud.mqr.service.RobotGroupMemberService;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
-import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageSource;
 import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
@@ -177,13 +177,13 @@ public class PluginResultListener {
             NormalMember normalMember = members.get(Long.parseLong(pluginParam.getFrom()));
             Duration between = Duration.between(now, SEVEN_LOCAL_TIME);
             if (Objects.nonNull(normalMember)) {
-                Ats ats = new Ats();
-                ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
-                ats.setContent("不好意思，由于现在是宵禁时间；加上赛雷Robot全体禁言有bug，不得已配置自动撤回及禁言至宵禁结束，敬请谅解！");
-                Message message = MessageUtil.convertGroupMessage(ats, group);
-                if (Objects.nonNull(message)) {
-                    group.sendMessage(message);
-                }
+//                Ats ats = new Ats();
+//                ats.setMids(Lists.newArrayList(pluginParam.getFrom()));
+//                ats.setContent("不好意思，由于现在是宵禁时间；加上赛雷Robot全体禁言有bug，不得已配置自动撤回及禁言至宵禁结束，敬请谅解！");
+//                Message message = MessageUtil.convertGroupMessage(ats, group);
+//                if (Objects.nonNull(message)) {
+//                    group.sendMessage(message);
+//                }
                 normalMember.mute((int) between.getSeconds());
             }
             MessageChain message = (MessageChain) pluginParam.getMessage();

@@ -137,7 +137,7 @@ public class MuteAllPluginExecutor extends AbstractPluginExecutor  {
         if (!CollectionUtils.isEmpty(messageEvent.getToIds())) {
             Integer hour = LocalTime.now().getHour();
             messageEvent.setAction(Action.builder().isMuteAll(true).build());
-            messageEvent.setMessage(String.format("%s点开始宵禁！", hour));
+            messageEvent.setMessage(String.format("%s点开始宵禁！此时间后的消息将自动撤回，并禁言至宵禁结束，敬请谅解！", hour));
             pushMessage(messageEvent);
         }
     }
